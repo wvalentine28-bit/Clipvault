@@ -1,0 +1,1401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ClipVault — YouTube Repurposing Suite</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F7F8FA;
+    --surface: #FFFFFF;
+    --surface2: #F0F2F5;
+    --border: #E4E7EC;
+    --text: #101828;
+    --text2: #667085;
+    --text3: #98A2B3;
+    --accent: #2563EB;
+    --accent-light: #EFF4FF;
+    --accent2: #7C3AED;
+    --green: #12B76A;
+    --green-light: #ECFDF3;
+    --red: #F04438;
+    --yellow: #F79009;
+    --yellow-light: #FFFAEB;
+    --radius: 10px;
+    --shadow: 0 1px 3px rgba(16,24,40,0.06), 0 1px 2px rgba(16,24,40,0.04);
+    --shadow-md: 0 4px 8px rgba(16,24,40,0.06), 0 2px 4px rgba(16,24,40,0.04);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    display: flex;
+    overflow: hidden;
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 224px;
+    min-width: 224px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 20px 0;
+  }
+
+  .logo {
+    padding: 0 20px 24px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+  }
+
+  .logo-mark {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo-icon {
+    width: 32px;
+    height: 32px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .logo-icon svg { width: 16px; height: 16px; fill: white; }
+
+  .logo-text {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.3px;
+    color: var(--text);
+  }
+
+  .logo-text span { color: var(--accent); }
+
+  .nav-section {
+    padding: 0 12px;
+    flex: 1;
+  }
+
+  .nav-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text3);
+    padding: 0 8px;
+    margin-bottom: 4px;
+    margin-top: 16px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--text2);
+    transition: all 0.12s;
+    margin-bottom: 2px;
+  }
+
+  .nav-item:hover { background: var(--bg); color: var(--text); }
+
+  .nav-item.active {
+    background: var(--accent-light);
+    color: var(--accent);
+  }
+
+  .nav-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+  .nav-badge {
+    margin-left: auto;
+    background: var(--accent);
+    color: white;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 1px 6px;
+    border-radius: 20px;
+  }
+
+  .sidebar-footer {
+    padding: 16px 12px 0;
+    border-top: 1px solid var(--border);
+    margin-top: auto;
+  }
+
+  .user-pill {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+
+  .avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: white;
+    flex-shrink: 0;
+  }
+
+  .user-info { min-width: 0; }
+  .user-name { font-size: 13px; font-weight: 600; color: var(--text); }
+  .user-plan { font-size: 11px; color: var(--text3); }
+
+  /* MAIN */
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .topbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 28px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+
+  .page-title { font-size: 16px; font-weight: 600; }
+  .page-subtitle { font-size: 13px; color: var(--text3); margin-top: 1px; }
+
+  .topbar-actions { display: flex; align-items: center; gap: 10px; }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    font-weight: 500;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    border: none;
+    transition: all 0.12s;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: white;
+  }
+  .btn-primary:hover { background: #1D4ED8; }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--text2);
+    border: 1px solid var(--border);
+  }
+  .btn-ghost:hover { background: var(--bg); }
+
+  .btn svg { width: 15px; height: 15px; }
+
+  /* CONTENT */
+  .content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 28px;
+  }
+
+  /* PANELS */
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* DASHBOARD */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: var(--shadow);
+  }
+
+  .stat-label { font-size: 12px; color: var(--text2); font-weight: 500; margin-bottom: 8px; }
+  .stat-value { font-size: 26px; font-weight: 600; letter-spacing: -0.5px; line-height: 1; margin-bottom: 6px; }
+  .stat-delta {
+    font-size: 12px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+  .delta-up { color: var(--green); }
+  .delta-down { color: var(--red); }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  .card-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .card-title { font-size: 14px; font-weight: 600; }
+  .card-sub { font-size: 12px; color: var(--text3); margin-top: 1px; }
+
+  .card-body { padding: 20px; }
+
+  /* CLIP ROWS */
+  .clip-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+    cursor: pointer;
+  }
+  .clip-row:last-child { border-bottom: none; }
+  .clip-row:hover { background: var(--bg); }
+
+  .clip-thumb {
+    width: 60px;
+    height: 36px;
+    border-radius: 6px;
+    background: linear-gradient(135deg, #1e3a5f, #2563EB);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 18px;
+  }
+
+  .clip-info { flex: 1; min-width: 0; }
+  .clip-title { font-size: 13.5px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .clip-meta { font-size: 12px; color: var(--text3); margin-top: 2px; }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .badge-green { background: var(--green-light); color: var(--green); }
+  .badge-blue { background: var(--accent-light); color: var(--accent); }
+  .badge-yellow { background: var(--yellow-light); color: var(--yellow); }
+  .badge-gray { background: var(--surface2); color: var(--text2); }
+
+  /* BAR CHART */
+  .bar-chart { display: flex; align-items: flex-end; gap: 6px; height: 80px; }
+  .bar {
+    flex: 1;
+    background: var(--accent-light);
+    border-radius: 4px 4px 0 0;
+    transition: background 0.12s;
+    cursor: pointer;
+    position: relative;
+  }
+  .bar:hover { background: var(--accent); }
+  .bar-labels { display: flex; gap: 6px; margin-top: 6px; }
+  .bar-label { flex: 1; text-align: center; font-size: 10px; color: var(--text3); }
+
+  /* UPLOAD PANEL */
+  .upload-zone {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 48px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s;
+    background: var(--surface);
+    margin-bottom: 24px;
+  }
+  .upload-zone:hover { border-color: var(--accent); background: var(--accent-light); }
+
+  .upload-icon {
+    width: 48px;
+    height: 48px;
+    background: var(--accent-light);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+  }
+  .upload-icon svg { width: 22px; height: 22px; color: var(--accent); }
+
+  .upload-title { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+  .upload-sub { font-size: 13px; color: var(--text2); }
+  .upload-types { font-size: 12px; color: var(--text3); margin-top: 8px; }
+
+  /* SETTINGS ROWS */
+  .setting-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .setting-row:last-child { border-bottom: none; }
+  .setting-label { font-size: 13.5px; font-weight: 500; }
+  .setting-desc { font-size: 12px; color: var(--text3); margin-top: 2px; }
+
+  /* TOGGLE */
+  .toggle {
+    width: 40px;
+    height: 22px;
+    background: var(--border);
+    border-radius: 11px;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.2s;
+    flex-shrink: 0;
+  }
+  .toggle.on { background: var(--accent); }
+  .toggle::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    background: white;
+    border-radius: 50%;
+    top: 3px;
+    left: 3px;
+    transition: left 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+  }
+  .toggle.on::after { left: 21px; }
+
+  /* SCRIPT AREA */
+  .script-area {
+    width: 100%;
+    min-height: 120px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13.5px;
+    color: var(--text);
+    background: var(--surface);
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.12s;
+    line-height: 1.6;
+  }
+  .script-area:focus { border-color: var(--accent); }
+
+  .input {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 9px 13px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13.5px;
+    color: var(--text);
+    background: var(--surface);
+    outline: none;
+    transition: border-color 0.12s;
+  }
+  .input:focus { border-color: var(--accent); }
+
+  .select {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 9px 13px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13.5px;
+    color: var(--text);
+    background: var(--surface);
+    outline: none;
+    cursor: pointer;
+  }
+
+  .form-label { font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 6px; display: block; text-transform: uppercase; letter-spacing: 0.05em; }
+
+  .form-group { margin-bottom: 18px; }
+
+  /* AI Response */
+  .ai-response {
+    background: var(--surface2);
+    border-radius: var(--radius);
+    padding: 16px;
+    font-size: 13.5px;
+    line-height: 1.7;
+    color: var(--text);
+    display: none;
+    border-left: 3px solid var(--accent);
+  }
+
+  .ai-response.visible { display: block; }
+
+  /* SCHEDULE GRID */
+  .schedule-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .day-header { font-size: 11px; font-weight: 600; color: var(--text3); text-align: center; padding: 4px 0; }
+  .day-cell {
+    aspect-ratio: 1;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.12s;
+    border: 1px solid transparent;
+    position: relative;
+  }
+  .day-cell:hover { background: var(--accent-light); border-color: var(--accent); color: var(--accent); }
+  .day-cell.has-post { background: var(--accent-light); color: var(--accent); font-weight: 700; }
+  .day-cell.has-post::after {
+    content: '';
+    position: absolute;
+    bottom: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 4px;
+    background: var(--accent);
+    border-radius: 50%;
+  }
+  .day-cell.today { background: var(--accent); color: white; border-color: var(--accent); }
+
+  /* PROGRESS BAR */
+  .progress-bar {
+    height: 6px;
+    background: var(--surface2);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 8px;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 3px;
+    transition: width 0.5s ease;
+  }
+
+  /* PROCESSING ANIMATION */
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+
+  .shimmer {
+    background: linear-gradient(90deg, var(--surface2) 25%, var(--border) 50%, var(--surface2) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s infinite;
+    border-radius: 6px;
+  }
+
+  /* CLIP CARDS (upload view) */
+  .clip-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+
+  .clip-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    transition: box-shadow 0.15s;
+  }
+  .clip-card:hover { box-shadow: var(--shadow-md); }
+
+  .clip-card-thumb {
+    height: 90px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+  }
+
+  .clip-card-body { padding: 12px; }
+  .clip-card-title { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+  .clip-card-meta { font-size: 11px; color: var(--text3); margin-bottom: 8px; }
+  .clip-card-actions { display: flex; gap: 6px; }
+
+  .btn-sm {
+    padding: 5px 10px;
+    font-size: 12px;
+    border-radius: 6px;
+  }
+
+  /* Notification dot */
+  .notif {
+    width: 8px;
+    height: 8px;
+    background: var(--red);
+    border-radius: 50%;
+    margin-left: auto;
+  }
+
+  /* Platform pills */
+  .platform-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .platform-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+  .platform-pill.selected { border-color: var(--accent); background: var(--accent-light); color: var(--accent); }
+
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="logo">
+    <div class="logo-mark">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24"><path d="M4 4h16a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2zm8 3L7 17h2l1-3h4l1 3h2L12 7zm0 3l1.5 4h-3L12 10z"/></svg>
+      </div>
+      <span class="logo-text">Clip<span>Vault</span></span>
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Workspace</div>
+    <div class="nav-item active" onclick="showPanel('dashboard')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      Dashboard
+    </div>
+    <div class="nav-item" onclick="showPanel('repurpose')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      Repurpose Video
+      <span class="nav-badge">New</span>
+    </div>
+    <div class="nav-item" onclick="showPanel('clips')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.26a1 1 0 01-1.447.9L15 14M3 8a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
+      My Clips
+    </div>
+    <div class="nav-item" onclick="showPanel('scripts')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      Script Writer
+    </div>
+    <div class="nav-label">Distribution</div>
+    <div class="nav-item" onclick="showPanel('schedule')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Scheduler
+    </div>
+    <div class="nav-item" onclick="showPanel('analytics')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      Analytics
+      <div class="notif"></div>
+    </div>
+    <div class="nav-label">Account</div>
+    <div class="nav-item" onclick="showPanel('settings')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      Settings
+    </div>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="user-pill">
+      <div class="avatar">MV</div>
+      <div class="user-info">
+        <div class="user-name">Matt V.</div>
+        <div class="user-plan">Pro Plan</div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div>
+      <div class="page-title" id="page-title">Dashboard</div>
+      <div class="page-subtitle" id="page-sub">Welcome back, Matt.</div>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn btn-ghost" onclick="showPanel('repurpose')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        New Project
+      </button>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div class="panel active" id="panel-dashboard">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Clips Generated</div>
+          <div class="stat-value">142</div>
+          <div class="stat-delta delta-up">↑ 18 this week</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total Views</div>
+          <div class="stat-value">84.2K</div>
+          <div class="stat-delta delta-up">↑ 12% vs last month</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Scheduled Posts</div>
+          <div class="stat-value">9</div>
+          <div class="stat-delta delta-up">Next: Tomorrow 9am</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Hours Saved</div>
+          <div class="stat-value">38h</div>
+          <div class="stat-delta delta-up">↑ 5h this week</div>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Recent Clips</div>
+              <div class="card-sub">Last 5 generated</div>
+            </div>
+            <button class="btn btn-ghost btn-sm" onclick="showPanel('clips')">View all</button>
+          </div>
+          <div class="clip-row">
+            <div class="clip-thumb">🎯</div>
+            <div class="clip-info">
+              <div class="clip-title">Cold open hook — Ep 12</div>
+              <div class="clip-meta">0:47 · YouTube Shorts</div>
+            </div>
+            <span class="badge badge-green">Published</span>
+          </div>
+          <div class="clip-row">
+            <div class="clip-thumb">🛣️</div>
+            <div class="clip-info">
+              <div class="clip-title">The Left Hand story cut</div>
+              <div class="clip-meta">1:02 · Reels + TikTok</div>
+            </div>
+            <span class="badge badge-blue">Scheduled</span>
+          </div>
+          <div class="clip-row">
+            <div class="clip-thumb">🧠</div>
+            <div class="clip-info">
+              <div class="clip-title">The Monk segment — Ep 11</div>
+              <div class="clip-meta">0:38 · YouTube Shorts</div>
+            </div>
+            <span class="badge badge-yellow">Draft</span>
+          </div>
+          <div class="clip-row">
+            <div class="clip-thumb">🎤</div>
+            <div class="clip-info">
+              <div class="clip-title">The Close — action call</div>
+              <div class="clip-meta">0:29 · All platforms</div>
+            </div>
+            <span class="badge badge-green">Published</span>
+          </div>
+          <div class="clip-row">
+            <div class="clip-thumb">📈</div>
+            <div class="clip-info">
+              <div class="clip-title">Floor segment teaser</div>
+              <div class="clip-meta">0:55 · LinkedIn only</div>
+            </div>
+            <span class="badge badge-gray">Processing</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Weekly Views</div>
+              <div class="card-sub">All platforms combined</div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="bar-chart">
+              <div class="bar" style="height:40%"></div>
+              <div class="bar" style="height:60%"></div>
+              <div class="bar" style="height:45%"></div>
+              <div class="bar" style="height:80%"></div>
+              <div class="bar" style="height:55%"></div>
+              <div class="bar" style="height:95%"></div>
+              <div class="bar" style="height:70%"></div>
+            </div>
+            <div class="bar-labels">
+              <div class="bar-label">M</div><div class="bar-label">T</div><div class="bar-label">W</div>
+              <div class="bar-label">T</div><div class="bar-label">F</div><div class="bar-label">S</div>
+              <div class="bar-label">S</div>
+            </div>
+            <div style="margin-top:20px; display:flex; gap:16px;">
+              <div>
+                <div class="stat-label">YouTube</div>
+                <div style="font-size:18px;font-weight:600;">41.2K</div>
+              </div>
+              <div>
+                <div class="stat-label">TikTok</div>
+                <div style="font-size:18px;font-weight:600;">28.8K</div>
+              </div>
+              <div>
+                <div class="stat-label">Instagram</div>
+                <div style="font-size:18px;font-weight:600;">14.2K</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- REPURPOSE -->
+    <div class="panel" id="panel-repurpose">
+      <div class="upload-zone" onclick="simulateUpload()">
+        <div class="upload-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/></svg>
+        </div>
+        <div class="upload-title">Drop your video or paste a YouTube URL</div>
+        <div class="upload-sub">ClipVault will analyze and extract the best short-form moments</div>
+        <div class="upload-types">MP4, MOV, AVI · Max 4GB · or paste a YouTube link below</div>
+      </div>
+
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-header"><div class="card-title">YouTube URL Import</div></div>
+        <div class="card-body">
+          <div style="display:flex;gap:10px;">
+            <input class="input" placeholder="https://youtube.com/watch?v=..." style="flex:1;" id="yt-url">
+            <button class="btn btn-primary" onclick="simulateProcess()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              Analyze
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" id="process-card" style="display:none;">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Processing Video</div>
+            <div class="card-sub" id="process-step">Downloading transcript...</div>
+          </div>
+          <span class="badge badge-yellow">In Progress</span>
+        </div>
+        <div class="card-body">
+          <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+          <div style="margin-top:20px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+            <div style="text-align:center;padding:14px;background:var(--surface2);border-radius:8px;">
+              <div style="font-size:22px;font-weight:700;" id="clips-found">—</div>
+              <div style="font-size:11px;color:var(--text3);margin-top:2px;">Clips Found</div>
+            </div>
+            <div style="text-align:center;padding:14px;background:var(--surface2);border-radius:8px;">
+              <div style="font-size:22px;font-weight:700;" id="hooks-found">—</div>
+              <div style="font-size:11px;color:var(--text3);margin-top:2px;">Strong Hooks</div>
+            </div>
+            <div style="text-align:center;padding:14px;background:var(--surface2);border-radius:8px;">
+              <div style="font-size:22px;font-weight:700;" id="time-found">—</div>
+              <div style="font-size:11px;color:var(--text3);margin-top:2px;">Avg Duration</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MY CLIPS -->
+    <div class="panel" id="panel-clips">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
+        <input class="input" placeholder="Search clips..." style="max-width:280px;">
+        <select class="select">
+          <option>All platforms</option>
+          <option>YouTube Shorts</option>
+          <option>TikTok</option>
+          <option>Reels</option>
+        </select>
+        <select class="select">
+          <option>All status</option>
+          <option>Published</option>
+          <option>Scheduled</option>
+          <option>Draft</option>
+        </select>
+      </div>
+
+      <div class="clip-cards">
+        <div class="clip-card">
+          <div class="clip-card-thumb" style="background:linear-gradient(135deg,#1e3a5f,#2563EB);">🛣️</div>
+          <div class="clip-card-body">
+            <div class="clip-card-title">The Left Hand — cold open</div>
+            <div class="clip-card-meta">1:02 · Extracted Jun 4</div>
+            <span class="badge badge-green">Published</span>
+            <div class="clip-card-actions" style="margin-top:10px;">
+              <button class="btn btn-ghost btn-sm">Edit</button>
+              <button class="btn btn-primary btn-sm">Schedule</button>
+            </div>
+          </div>
+        </div>
+        <div class="clip-card">
+          <div class="clip-card-thumb" style="background:linear-gradient(135deg,#3b1f6b,#7C3AED);">🧠</div>
+          <div class="clip-card-body">
+            <div class="clip-card-title">The Monk reframe — Ep 11</div>
+            <div class="clip-card-meta">0:38 · Extracted Jun 3</div>
+            <span class="badge badge-yellow">Draft</span>
+            <div class="clip-card-actions" style="margin-top:10px;">
+              <button class="btn btn-ghost btn-sm">Edit</button>
+              <button class="btn btn-primary btn-sm">Schedule</button>
+            </div>
+          </div>
+        </div>
+        <div class="clip-card">
+          <div class="clip-card-thumb" style="background:linear-gradient(135deg,#064e3b,#12B76A);">🎯</div>
+          <div class="clip-card-body">
+            <div class="clip-card-title">The Close — one action</div>
+            <div class="clip-card-meta">0:29 · Extracted Jun 2</div>
+            <span class="badge badge-blue">Scheduled</span>
+            <div class="clip-card-actions" style="margin-top:10px;">
+              <button class="btn btn-ghost btn-sm">Edit</button>
+              <button class="btn btn-ghost btn-sm">Unschedule</button>
+            </div>
+          </div>
+        </div>
+        <div class="clip-card">
+          <div class="clip-card-thumb" style="background:linear-gradient(135deg,#7c2d12,#F79009);">📈</div>
+          <div class="clip-card-body">
+            <div class="clip-card-title">Floor segment — Ep 10</div>
+            <div class="clip-card-meta">0:55 · Extracted May 30</div>
+            <span class="badge badge-green">Published</span>
+            <div class="clip-card-actions" style="margin-top:10px;">
+              <button class="btn btn-ghost btn-sm">Edit</button>
+              <button class="btn btn-primary btn-sm">Repurpose</button>
+            </div>
+          </div>
+        </div>
+        <div class="clip-card">
+          <div class="clip-card-thumb" style="background:linear-gradient(135deg,#1f2937,#6B7280);">🎤</div>
+          <div class="clip-card-body">
+            <div class="clip-card-title">Break principle — Ep 10</div>
+            <div class="clip-card-meta">0:44 · Extracted May 30</div>
+            <span class="badge badge-gray">Processing</span>
+            <div class="clip-card-actions" style="margin-top:10px;">
+              <button class="btn btn-ghost btn-sm" disabled>Edit</button>
+              <button class="btn btn-ghost btn-sm" disabled>Schedule</button>
+            </div>
+          </div>
+        </div>
+        <div class="clip-card" style="border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;" onclick="showPanel('repurpose')">
+          <div style="text-align:center;padding:20px;">
+            <div style="font-size:28px;margin-bottom:8px;">+</div>
+            <div style="font-size:13px;color:var(--text3);">Generate new clip</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCRIPT WRITER -->
+    <div class="panel" id="panel-scripts">
+      <div class="two-col">
+        <div>
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-header"><div class="card-title">Script Generator</div></div>
+            <div class="card-body">
+              <div class="form-group">
+                <label class="form-label">Topic / Hook</label>
+                <input class="input" placeholder="e.g. The best reps treat small accounts like big ones" id="script-topic">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Format</label>
+                <select class="select" style="width:100%;" id="script-format">
+                  <option>YouTube Short (60s)</option>
+                  <option>TikTok hook + punch</option>
+                  <option>LinkedIn thought leadership</option>
+                  <option>Full episode (8–12 min)</option>
+                  <option>Windshield Time 318 format</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Tone</label>
+                <select class="select" style="width:100%;" id="script-tone">
+                  <option>Direct + Gritty</option>
+                  <option>Conversational</option>
+                  <option>Philosophical</option>
+                  <option>High energy</option>
+                </select>
+              </div>
+              <button class="btn btn-primary" style="width:100%;" onclick="generateScript()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                Generate Script
+              </button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header"><div class="card-title">Title & Hook Ideas</div></div>
+            <div class="card-body">
+              <button class="btn btn-ghost" style="width:100%;margin-bottom:10px;" onclick="generateTitles()">Generate 5 Titles</button>
+              <div id="title-list" style="display:none;">
+                <div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;cursor:pointer;" class="clip-row" style="padding:8px;">📌 You Are Not Practicing On The Small Ones</div>
+                <div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;cursor:pointer;">🔥 What Your Neglected Accounts Say About You</div>
+                <div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;cursor:pointer;">💡 The Left Hand Rule Every Sales Rep Ignores</div>
+                <div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;cursor:pointer;">⚡ Stop Saving Your Best Self For Big Accounts</div>
+                <div style="padding:8px 0;font-size:13px;cursor:pointer;">🎯 How You Treat the $200 Order Reveals Everything</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="display:flex;flex-direction:column;">
+          <div class="card-header">
+            <div class="card-title">Generated Script</div>
+            <button class="btn btn-ghost btn-sm" id="copy-btn" onclick="copyScript()" style="display:none;">Copy</button>
+          </div>
+          <div class="card-body" style="flex:1;">
+            <div id="script-placeholder" style="color:var(--text3);font-size:13.5px;line-height:1.7;">
+              Your AI-generated script will appear here. Choose a topic, format, and tone, then click Generate.
+            </div>
+            <div class="ai-response" id="script-output"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCHEDULER -->
+    <div class="panel" id="panel-schedule">
+      <div class="two-col">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">June 2026</div>
+          </div>
+          <div class="card-body">
+            <div class="schedule-grid">
+              <div class="day-header">S</div><div class="day-header">M</div><div class="day-header">T</div>
+              <div class="day-header">W</div><div class="day-header">T</div><div class="day-header">F</div><div class="day-header">S</div>
+              <div class="day-cell">1</div><div class="day-cell has-post">2</div><div class="day-cell">3</div>
+              <div class="day-cell has-post">4</div><div class="day-cell">5</div><div class="day-cell has-post">6</div>
+              <div class="day-cell today">7</div>
+              <div class="day-cell">8</div><div class="day-cell has-post">9</div><div class="day-cell">10</div>
+              <div class="day-cell">11</div><div class="day-cell has-post">12</div><div class="day-cell">13</div>
+              <div class="day-cell">14</div><div class="day-cell">15</div>
+              <div class="day-cell">16</div><div class="day-cell has-post">17</div><div class="day-cell">18</div>
+              <div class="day-cell">19</div><div class="day-cell">20</div><div class="day-cell has-post">21</div>
+              <div class="day-cell">22</div>
+              <div class="day-cell">23</div><div class="day-cell">24</div><div class="day-cell has-post">25</div>
+              <div class="day-cell">26</div><div class="day-cell">27</div><div class="day-cell">28</div>
+              <div class="day-cell">29</div>
+              <div class="day-cell">30</div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-header"><div class="card-title">Schedule a Post</div></div>
+            <div class="card-body">
+              <div class="form-group">
+                <label class="form-label">Select Clip</label>
+                <select class="select" style="width:100%;">
+                  <option>The Left Hand — cold open (1:02)</option>
+                  <option>The Monk reframe — Ep 11 (0:38)</option>
+                  <option>The Close — one action (0:29)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Platforms</label>
+                <div class="platform-row">
+                  <div class="platform-pill selected" onclick="this.classList.toggle('selected')">▶ YouTube</div>
+                  <div class="platform-pill" onclick="this.classList.toggle('selected')">♪ TikTok</div>
+                  <div class="platform-pill selected" onclick="this.classList.toggle('selected')">◎ Instagram</div>
+                  <div class="platform-pill" onclick="this.classList.toggle('selected')">in LinkedIn</div>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Date & Time</label>
+                <input class="input" type="datetime-local" value="2026-06-09T09:00">
+              </div>
+              <button class="btn btn-primary" style="width:100%;">Confirm Schedule</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header"><div class="card-title">Upcoming Posts</div></div>
+            <div class="clip-row">
+              <div class="clip-thumb" style="background:linear-gradient(135deg,#1e3a5f,#2563EB);">🛣️</div>
+              <div class="clip-info">
+                <div class="clip-title">The Left Hand — cold open</div>
+                <div class="clip-meta">Jun 9 · 9:00am · YT + IG</div>
+              </div>
+              <span class="badge badge-blue">Scheduled</span>
+            </div>
+            <div class="clip-row">
+              <div class="clip-thumb" style="background:linear-gradient(135deg,#064e3b,#12B76A);">🎯</div>
+              <div class="clip-info">
+                <div class="clip-title">The Close — one action</div>
+                <div class="clip-meta">Jun 12 · 7:00am · All</div>
+              </div>
+              <span class="badge badge-blue">Scheduled</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ANALYTICS -->
+    <div class="panel" id="panel-analytics">
+      <div class="stats-grid" style="margin-bottom:16px;">
+        <div class="stat-card">
+          <div class="stat-label">Top Clip Views</div>
+          <div class="stat-value">22.4K</div>
+          <div class="stat-delta delta-up">↑ Left Hand clip</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Avg Watch Time</div>
+          <div class="stat-value">74%</div>
+          <div class="stat-delta delta-up">↑ 6% vs last batch</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Follower Growth</div>
+          <div class="stat-value">+412</div>
+          <div class="stat-delta delta-up">This month</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Engagement Rate</div>
+          <div class="stat-value">4.8%</div>
+          <div class="stat-delta delta-up">↑ Above avg</div>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Top Performing Clips</div>
+          </div>
+          <div class="clip-row">
+            <div style="font-size:13px;font-weight:700;color:var(--text3);width:20px;">#1</div>
+            <div class="clip-thumb" style="background:linear-gradient(135deg,#1e3a5f,#2563EB);">🛣️</div>
+            <div class="clip-info">
+              <div class="clip-title">The Left Hand — cold open</div>
+              <div class="clip-meta">22.4K views · 4.9% engagement</div>
+            </div>
+          </div>
+          <div class="clip-row">
+            <div style="font-size:13px;font-weight:700;color:var(--text3);width:20px;">#2</div>
+            <div class="clip-thumb" style="background:linear-gradient(135deg,#3b1f6b,#7C3AED);">🧠</div>
+            <div class="clip-info">
+              <div class="clip-title">The Monk segment — Ep 11</div>
+              <div class="clip-meta">18.1K views · 5.2% engagement</div>
+            </div>
+          </div>
+          <div class="clip-row">
+            <div style="font-size:13px;font-weight:700;color:var(--text3);width:20px;">#3</div>
+            <div class="clip-thumb" style="background:linear-gradient(135deg,#064e3b,#12B76A);">🎯</div>
+            <div class="clip-info">
+              <div class="clip-title">The Close — one action</div>
+              <div class="clip-meta">14.3K views · 3.8% engagement</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><div class="card-title">Platform Breakdown</div></div>
+          <div class="card-body">
+            <div style="display:flex;flex-direction:column;gap:14px;">
+              <div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+                  <span style="font-size:13px;font-weight:500;">YouTube Shorts</span>
+                  <span style="font-size:13px;color:var(--text3);">41.2K</span>
+                </div>
+                <div class="progress-bar"><div class="progress-fill" style="width:75%;"></div></div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+                  <span style="font-size:13px;font-weight:500;">TikTok</span>
+                  <span style="font-size:13px;color:var(--text3);">28.8K</span>
+                </div>
+                <div class="progress-bar"><div class="progress-fill" style="width:52%;background:var(--accent2);"></div></div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+                  <span style="font-size:13px;font-weight:500;">Instagram Reels</span>
+                  <span style="font-size:13px;color:var(--text3);">14.2K</span>
+                </div>
+                <div class="progress-bar"><div class="progress-fill" style="width:26%;background:var(--yellow);"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="panel" id="panel-settings">
+      <div class="two-col">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Connected Channels</div></div>
+          <div class="card-body">
+            <div class="setting-row">
+              <div>
+                <div class="setting-label">▶ YouTube</div>
+                <div class="setting-desc">@windshieldtime318 · Connected</div>
+              </div>
+              <span class="badge badge-green">Live</span>
+            </div>
+            <div class="setting-row">
+              <div>
+                <div class="setting-label">♪ TikTok</div>
+                <div class="setting-desc">@windshieldtime318 · Connected</div>
+              </div>
+              <span class="badge badge-green">Live</span>
+            </div>
+            <div class="setting-row">
+              <div>
+                <div class="setting-label">◎ Instagram</div>
+                <div class="setting-desc">Not connected</div>
+              </div>
+              <button class="btn btn-ghost btn-sm">Connect</button>
+            </div>
+            <div class="setting-row">
+              <div>
+                <div class="setting-label">in LinkedIn</div>
+                <div class="setting-desc">Not connected</div>
+              </div>
+              <button class="btn btn-ghost btn-sm">Connect</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><div class="card-title">Automation Settings</div></div>
+          <div class="card-body">
+            <div class="setting-row">
+              <div>
+                <div class="setting-label">Auto-detect clip moments</div>
+                <div class="setting-desc">AI identifies best short-form segments</div>
+              </div>
+              <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+            </div>
+            <div class="setting-row">
+              <div>
+                <div class="setting-label">Auto-generate captions</div>
+                <div class="setting-desc">Add burned-in subtitles to all clips</div>
+              </div>
+              <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+            </div>
+            <div class="setting-row">
+              <div>
+                <div class="setting-label">Auto-schedule after approval</div>
+                <div class="setting-desc">Post at optimal times after you approve</div>
+              </div>
+              <div class="toggle" onclick="this.classList.toggle('on')"></div>
+            </div>
+            <div class="setting-row">
+              <div>
+                <div class="setting-label">Weekly analytics report</div>
+                <div class="setting-desc">Email summary every Monday</div>
+              </div>
+              <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const panels = {
+    dashboard: { title: 'Dashboard', sub: 'Welcome back, Matt.' },
+    repurpose: { title: 'Repurpose Video', sub: 'Upload a video or paste a YouTube URL to extract clips.' },
+    clips: { title: 'My Clips', sub: '5 clips in your library.' },
+    scripts: { title: 'Script Writer', sub: 'AI-powered scripts for every format.' },
+    schedule: { title: 'Scheduler', sub: 'Plan and publish across all platforms.' },
+    analytics: { title: 'Analytics', sub: 'Performance across YouTube, TikTok, and Instagram.' },
+    settings: { title: 'Settings', sub: 'Manage channels and automation.' },
+  };
+
+  function showPanel(id) {
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('panel-' + id).classList.add('active');
+    const info = panels[id];
+    document.getElementById('page-title').textContent = info.title;
+    document.getElementById('page-sub').textContent = info.sub;
+    event && event.currentTarget && event.currentTarget.classList.add('active');
+  }
+
+  function simulateUpload() {
+    document.getElementById('yt-url').value = 'https://youtube.com/watch?v=example123';
+    setTimeout(simulateProcess, 300);
+  }
+
+  function simulateProcess() {
+    const card = document.getElementById('process-card');
+    card.style.display = 'block';
+    const fill = document.getElementById('progress-fill');
+    const step = document.getElementById('process-step');
+    const steps = [
+      [10, 'Downloading transcript...'],
+      [30, 'Analyzing with AI...'],
+      [55, 'Identifying key moments...'],
+      [75, 'Extracting clip segments...'],
+      [90, 'Generating thumbnails...'],
+      [100, 'Done! 7 clips found.'],
+    ];
+    let i = 0;
+    const run = () => {
+      if (i >= steps.length) {
+        document.getElementById('clips-found').textContent = '7';
+        document.getElementById('hooks-found').textContent = '3';
+        document.getElementById('time-found').textContent = '0:48';
+        return;
+      }
+      fill.style.width = steps[i][0] + '%';
+      step.textContent = steps[i][1];
+      i++;
+      setTimeout(run, 800);
+    };
+    run();
+  }
+
+  const scripts = {
+    'Windshield Time 318 format': `[THE FLOOR]
+There was a golf account in Monterey. Sixty-dollar sleeves of Pro V1s. One or two boxes a week, maybe three. Not the account that won quotas. But it had a name. And it sat right on the 18th hole of a course with more history than most reps will ever see.
+
+I started treating it like a pit stop. Quick check. In and out. I saved my A-game for the big buyers.
+
+Then one Tuesday I watched another rep — newer than me, smaller bag — sit down with that buyer for 45 minutes. Just talking. Listening. Taking notes.
+
+Two months later, that account tripled.
+
+[THE BREAK]
+You are not practicing on the small ones. You are revealing yourself on them.
+
+The way you show up to a $200 order tells a buyer everything they need to know about how you'll treat their $20,000 order.
+
+Small accounts don't build careers — your behavior inside them does.
+
+[THE MONK]
+The road doesn't care about your quota. It only knows what you put into it mile after mile. The rep who coasts through small stops is already coasting through their character. There's no switch you flip when the stakes get high. You are always in character. Or you aren't.
+
+[THE CLOSE]
+One action: This week, treat your lowest-revenue account like it's your most important one. Not as a test. As a practice.`,
+    'YouTube Short (60s)': `[HOOK — 0:00–0:05]
+"Most reps lose big accounts before they ever get them."
+
+[BODY — 0:05–0:50]
+Here's the thing nobody tells you in sales training: the $200 order is an audition.
+
+Your biggest buyer is watching how you treat everyone else. Small accounts, low-margin stops, quick callbacks — they don't matter to your quota. They matter to your reputation.
+
+The reps who thrive long-term aren't the ones who save their energy for big swings. They're the ones who bring the same intensity to every conversation — regardless of the dollar sign attached.
+
+[CTA — 0:50–0:60]
+If this hit different, follow for more. New episode every week.`,
+    'TikTok hook + punch': `Hook: "The account that almost cost me my career was worth $60 a week."
+
+[Pause. Let that sit.]
+
+I treated it like a pit stop. Quick. Minimal. In and out.
+
+Then someone else started treating it like a priority — and that buyer told everyone.
+
+The punch: Your smallest account is your biggest audition.
+
+Show up.`,
+    'LinkedIn thought leadership': `Something I learned the hard way in 20+ years on the road:
+
+The accounts that don't matter to your quota are the ones that matter most to your reputation.
+
+I used to coast through low-volume stops. Get in, get out. Save the energy for the big buyers.
+
+What I didn't realize: buyers talk. And how you treat a $200 order signals everything about how you'd handle $200,000.
+
+The reps who build durable careers aren't necessarily the best closers. They're the most consistent ones. Same energy. Same preparation. Same respect — for every account, every time.
+
+Your behavior doesn't change with the stakes. It reveals what was always there.`,
+    'Full episode (8–12 min)': `[INTRO — The Setup]
+Welcome back to Windshield Time. I'm your narrator. This is the show about what happens between the calls — in the car, in the quiet, when nobody's watching.
+
+Today's episode is called The Left Hand. And it starts in Monterey...
+
+[THE FLOOR — Story]
+I had a territory that stretched across the Peninsula. Pebble Beach. Spyglass. Carmel. Courses that had hosted Opens. Courses with guest books signed by presidents.
+
+And right at the edge of it, a small pro shop. One buyer. Sixty-dollar sleeves of balls. Never more than a couple boxes a week.
+
+I knew the account existed. I visited it. But I treated it like a checkbox — not a relationship...
+
+[Continue with full Windshield Time format structure]`
+  };
+
+  function generateScript() {
+    const format = document.getElementById('script-format').value;
+    const output = document.getElementById('script-output');
+    const placeholder = document.getElementById('script-placeholder');
+    const copyBtn = document.getElementById('copy-btn');
+
+    placeholder.style.display = 'none';
+    output.classList.remove('visible');
+    output.textContent = 'Generating...';
+    output.classList.add('visible');
+
+    setTimeout(() => {
+      const content = scripts[format] || scripts['Windshield Time 318 format'];
+      output.textContent = content;
+      copyBtn.style.display = 'inline-flex';
+    }, 1200);
+  }
+
+  function generateTitles() {
+    document.getElementById('title-list').style.display = 'block';
+  }
+
+  function copyScript() {
+    const text = document.getElementById('script-output').textContent;
+    navigator.clipboard.writeText(text).catch(() => {});
+    const btn = document.getElementById('copy-btn');
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy', 2000);
+  }
+</script>
+</body>
+</html>
