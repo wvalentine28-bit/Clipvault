@@ -643,24 +643,8 @@
   }
   .clip-result video { width: 100%; max-height: 260px; border-radius: 8px; background: #000; }
 
-  /* ── UPLOAD MODAL ── */
-  .modal-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.45);
-    display: flex; align-items: center; justify-content: center; z-index: 1000;
-  }
-  .modal {
-    background: var(--surface); border-radius: 12px; padding: 24px;
-    width: 480px; max-width: 95vw;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-  }
-  .modal-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
-  textarea.input { resize: vertical; min-height: 70px; line-height: 1.5; }
-
   /* ── MISC ── */
   .badge-red { background: #FEE4E2; color: var(--red); }
-  .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text3); flex-shrink: 0; }
-  .status-dot.green { background: var(--green); }
-  .channel-tag { font-size: 12px; color: var(--text2); display: flex; align-items: center; gap: 6px; }
   @keyframes spin { to { transform: rotate(360deg); } }
 </style>
 </head>
@@ -718,18 +702,6 @@
   </div>
 
   <div class="sidebar-footer">
-    <div id="yt-auth-status" style="padding:8px 10px;margin-bottom:6px;border-radius:8px;background:var(--surface2);display:none;">
-      <div class="channel-tag">
-        <div class="status-dot green"></div>
-        <span id="yt-channel-name" style="font-size:12px;font-weight:500;color:var(--text2);">Connected</span>
-      </div>
-    </div>
-    <div id="yt-connect-prompt" style="padding:8px 10px;margin-bottom:6px;">
-      <button class="btn btn-ghost" style="width:100%;font-size:12px;" onclick="location.href='/auth/youtube'">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
-        Connect YouTube
-      </button>
-    </div>
     <div class="user-pill">
       <div class="avatar">MV</div>
       <div class="user-info">
@@ -934,12 +906,6 @@
 
     <!-- VIRAL FINDER -->
     <div class="panel" id="panel-viral">
-      <div id="viral-connect-banner" class="info-banner" style="display:none;">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        Connect your YouTube channel to enable auto-upload of processed Shorts.
-        <button class="btn btn-ghost btn-sm" style="margin-left:auto;white-space:nowrap;" onclick="location.href='/auth/youtube'">Connect Now</button>
-      </div>
-
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap;">
         <select class="select" id="viral-region" onchange="fetchTrending()">
           <option value="US">🇺🇸 United States</option>
@@ -968,11 +934,6 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
           Refresh
         </button>
-        <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
-          <span style="font-size:13px;color:var(--text2);">Auto Mode</span>
-          <div class="toggle" id="auto-mode-toggle" onclick="toggleAutoMode()"></div>
-          <button class="btn btn-ghost btn-sm" id="run-now-btn" onclick="runAutoNow()" style="display:none;">Run Now</button>
-        </div>
       </div>
 
       <div id="viral-loading" style="display:none;text-align:center;padding:48px;color:var(--text3);">
@@ -1387,38 +1348,6 @@
   </div>
 </div>
 
-<!-- UPLOAD MODAL -->
-<div class="modal-overlay" id="upload-modal" style="display:none;" onclick="if(event.target===this)closeUploadModal()">
-  <div class="modal">
-    <div class="modal-title">Upload Short to YouTube</div>
-    <video id="modal-video" controls style="width:100%;border-radius:8px;background:#000;margin-bottom:14px;max-height:220px;"></video>
-    <div style="margin-bottom:12px;">
-      <label class="form-label">Title</label>
-      <input class="input" id="upload-title" placeholder="Video title...">
-    </div>
-    <div style="margin-bottom:12px;">
-      <label class="form-label">Description</label>
-      <textarea class="input" id="upload-description" placeholder="Description..."></textarea>
-    </div>
-    <div style="margin-bottom:18px;">
-      <label class="form-label">Visibility</label>
-      <select class="select" id="upload-privacy">
-        <option value="public">Public</option>
-        <option value="unlisted">Unlisted</option>
-        <option value="private">Private</option>
-      </select>
-    </div>
-    <div style="display:flex;gap:8px;justify-content:flex-end;align-items:center;">
-      <div id="upload-status" style="font-size:12px;color:var(--text2);flex:1;"></div>
-      <button class="btn btn-ghost" onclick="closeUploadModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="uploadClip()" id="upload-btn">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/></svg>
-        Upload to YouTube
-      </button>
-    </div>
-  </div>
-</div>
-
 <script>
   const panels = {
     dashboard: { title: 'Dashboard', sub: 'Welcome back, Matt.' },
@@ -1478,8 +1407,6 @@
   }
 
   // ── Real video processing ──────────────────────────────────────────
-  let _pendingClipPath = null;
-
   async function processVideoReal(urlOverride, titleHint) {
     const url = urlOverride || document.getElementById('yt-url').value.trim();
     if (!url) { alert('Please enter a YouTube URL.'); return; }
@@ -1548,16 +1475,10 @@
             <div style="font-size:14px;font-weight:600;">Short Clip ${i+1}</div>
             <div style="font-size:12px;color:var(--text3);">${Math.round(c.duration || 60)}s · Vertical 9:16</div>
           </div>
-          <div style="display:flex;gap:8px;">
-            <a href="${c.clipUrl}" download class="btn btn-ghost btn-sm">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              Download
-            </a>
-            <button class="btn btn-primary btn-sm" onclick="openUploadModal('${c.clipPath}','${_esc(label)}','${c.clipUrl}')">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/></svg>
-              Upload to YouTube
-            </button>
-          </div>
+          <a href="${c.clipUrl}" download class="btn btn-primary btn-sm">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download Short
+          </a>
         </div>
         <video controls src="${c.clipUrl}" style="width:100%;max-height:300px;border-radius:8px;background:#000;"></video>
       </div>
@@ -1638,142 +1559,6 @@
     showPanel('repurpose');
     processVideoReal(url, title);
   }
-
-  // ── Upload Modal ───────────────────────────────────────────────────
-  let _uploadClipPath = null;
-
-  function openUploadModal(clipPath, title, clipUrl) {
-    _uploadClipPath = clipPath;
-    document.getElementById('modal-video').src = clipUrl;
-    document.getElementById('upload-title').value = (title || 'Short Clip') + ' #Shorts';
-    document.getElementById('upload-description').value = 'Generated by ClipVault\n\n#Shorts #YouTube';
-    document.getElementById('upload-status').textContent = '';
-    const btn = document.getElementById('upload-btn');
-    btn.disabled = false;
-    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/></svg> Upload to YouTube';
-    document.getElementById('upload-modal').style.display = 'flex';
-  }
-
-  function closeUploadModal() {
-    document.getElementById('upload-modal').style.display = 'none';
-    document.getElementById('modal-video').src = '';
-  }
-
-  async function uploadClip() {
-    const btn = document.getElementById('upload-btn');
-    const status = document.getElementById('upload-status');
-    btn.disabled = true;
-    btn.textContent = 'Uploading…';
-    status.textContent = 'Uploading to YouTube…';
-
-    try {
-      const r = await fetch('/api/upload', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          clipPath: _uploadClipPath,
-          title: document.getElementById('upload-title').value,
-          description: document.getElementById('upload-description').value,
-          privacyStatus: document.getElementById('upload-privacy').value
-        })
-      });
-      const d = await r.json();
-      if (!r.ok) {
-        if (r.status === 401) {
-          status.innerHTML = '<a href="/auth/youtube" style="color:var(--accent);">Connect your YouTube channel first →</a>';
-        } else {
-          status.textContent = 'Error: ' + (d.error || 'Upload failed');
-          btn.disabled = false;
-          btn.textContent = 'Retry';
-        }
-        return;
-      }
-      btn.textContent = '✓ Uploaded!';
-      status.innerHTML = `Success! <a href="${d.url}" target="_blank" style="color:var(--accent);">View on YouTube →</a>`;
-    } catch (err) {
-      status.textContent = 'Error: ' + err.message;
-      btn.disabled = false;
-      btn.textContent = 'Retry';
-    }
-  }
-
-  // ── Auto Mode ──────────────────────────────────────────────────────
-  let _autoModeOn = false;
-
-  async function toggleAutoMode() {
-    _autoModeOn = !_autoModeOn;
-    document.getElementById('auto-mode-toggle').classList.toggle('on', _autoModeOn);
-    document.getElementById('run-now-btn').style.display = _autoModeOn ? 'inline-flex' : 'none';
-
-    if (_autoModeOn) {
-      try {
-        const r = await fetch('/api/auto/start', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ intervalHours: 24 })
-        });
-        if (r.status === 401) {
-          alert('Connect your YouTube channel first (sidebar → Connect YouTube).');
-          _autoModeOn = false;
-          document.getElementById('auto-mode-toggle').classList.remove('on');
-          document.getElementById('run-now-btn').style.display = 'none';
-        }
-      } catch (e) {
-        alert('Cannot connect to server. Make sure it\'s running: node server.js');
-        _autoModeOn = false;
-        document.getElementById('auto-mode-toggle').classList.remove('on');
-        document.getElementById('run-now-btn').style.display = 'none';
-      }
-    } else {
-      fetch('/api/auto/stop', { method: 'POST' }).catch(() => {});
-    }
-  }
-
-  async function runAutoNow() {
-    const btn = document.getElementById('run-now-btn');
-    btn.textContent = 'Running…';
-    btn.disabled = true;
-    try {
-      await fetch('/api/auto/run-now', { method: 'POST' });
-    } catch (_) {}
-    setTimeout(() => { btn.textContent = 'Run Now'; btn.disabled = false; }, 3000);
-  }
-
-  // ── Auth status on load ────────────────────────────────────────────
-  async function _checkAuth() {
-    try {
-      const r = await fetch('/auth/status');
-      if (!r.ok) return;
-      const d = await r.json();
-      const authEl = document.getElementById('yt-auth-status');
-      const connectEl = document.getElementById('yt-connect-prompt');
-      const viralBanner = document.getElementById('viral-connect-banner');
-      if (d.authenticated && d.channel) {
-        document.getElementById('yt-channel-name').textContent = d.channel.handle || d.channel.title;
-        authEl.style.display = 'block';
-        connectEl.style.display = 'none';
-        if (viralBanner) viralBanner.style.display = 'none';
-      } else {
-        authEl.style.display = 'none';
-        connectEl.style.display = 'block';
-        if (viralBanner) viralBanner.style.display = 'flex';
-      }
-    } catch (_) {
-      // Server not running — hide both, show nothing
-    }
-  }
-
-  // Handle OAuth redirect
-  if (location.search.includes('auth=success')) {
-    history.replaceState({}, '', '/');
-    _checkAuth();
-  } else if (location.search.includes('auth=error')) {
-    const msg = new URLSearchParams(location.search).get('message');
-    alert('YouTube auth error: ' + (msg || 'Unknown error'));
-    history.replaceState({}, '', '/');
-  }
-
-  // Initialize
-  _checkAuth();
 
   const scripts = {
     'Windshield Time 318 format': `[THE FLOOR]
