@@ -1,0 +1,63 @@
+{
+  "name": "@jarvis/desktop",
+  "version": "1.0.0",
+  "private": true,
+  "main": "dist/electron/main.js",
+  "scripts": {
+    "build": "tsc && electron-builder",
+    "dev": "concurrently \"tsc --watch\" \"wait-on tcp:3000 && electron .\"",
+    "start": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder",
+    "dist:mac": "electron-builder --mac",
+    "dist:win": "electron-builder --win",
+    "dist:linux": "electron-builder --linux",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "build": {
+    "appId": "com.jarvis.os",
+    "productName": "JARVIS OS",
+    "copyright": "Copyright © 2024 JARVIS OS",
+    "icon": "assets/icon",
+    "asar": true,
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "assets/**/*",
+      "node_modules/**/*"
+    ],
+    "mac": {
+      "category": "public.app-category.productivity",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "assets/entitlements.mac.plist",
+      "entitlementsInherit": "assets/entitlements.mac.plist",
+      "target": [{ "target": "dmg", "arch": ["x64", "arm64"] }]
+    },
+    "win": {
+      "target": [{ "target": "nsis", "arch": ["x64"] }]
+    },
+    "linux": {
+      "target": [{ "target": "AppImage", "arch": ["x64"] }],
+      "category": "Utility"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  },
+  "dependencies": {
+    "electron-store": "^10.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "concurrently": "^9.0.1",
+    "electron": "^33.0.2",
+    "electron-builder": "^25.1.7",
+    "typescript": "^5.5.4",
+    "wait-on": "^8.0.1"
+  }
+}
