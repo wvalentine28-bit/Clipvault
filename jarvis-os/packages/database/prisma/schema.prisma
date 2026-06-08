@@ -1,0 +1,496 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [pgvector(map: "vector", schema: "public"), uuid_ossp(map: "uuid-ossp")]
+}
+
+// ─── USER MANAGEMENT ─────────────────────────────────────────
+
+model User {
+  id             String          @id @default(dbgenerated("uuid_generate_v4()"))
+  email          String          @unique
+  name           String
+  passwordHash   String?
+  role           UserRole        @default(USER)
+  avatarUrl      String?
+  isActive       Boolean         @default(true)
+  emailVerified  Boolean         @default(false)
+  lastLoginAt    DateTime?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  // Relations
+  preferences    UserPreferences?
+  sessions       Session[]
+  apiKeys        ApiKey[]
+  conversations  Conversation[]
+  memories       Memory[]
+  tasks          Task[]
+  goals          Goal[]
+  projects       Project[]
+  automations    Automation[]
+  auditLogs      AuditLog[]
+  agentRuns      AgentRun[]
+  reminders      Reminder[]
+  calendarEvents CalendarEvent[]
+
+  @@index([email])
+}
+
+enum UserRole {
+  ADMIN
+  USER
+  VIEWER
+}
+
+model UserPreferences {
+  id                   String  @id @default(dbgenerated("uuid_generate_v4()"))
+  userId               String  @unique
+  theme                String  @default("dark")
+  voiceEnabled         Boolean @default(true)
+  voiceId              String  @default("EXAVITQu4vr4xnSDxMaL")
+  wakeWord             String  @default("jarvis")
+  language             String  @default("en")
+  timezone             String  @default("UTC")
+  notificationsEnabled Boolean @default(true)
+  continuousListening  Boolean @default(false)
+  responseStyle        String  @default("conversational")
+  defaultModel         String  @default("claude-sonnet-4-6")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Session {
+  id           String   @id @default(dbgenerated("uuid_generate_v4()"))
+  userId       String
+  token        String   @unique
+  expiresAt    DateTime
+  ipAddress    String?
+  userAgent    String?
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+}
+
+model ApiKey {
+  id          String    @id @default(dbgenerated("uuid_generate_v4()"))
+  userId      String
+  name        String
+  keyHash     String    @unique
+  keyPrefix   String
+  permissions String[]
+  lastUsedAt  DateTime?
+  expiresAt   DateTime?
+  createdAt   DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([keyHash])
+  @@index([userId])
+}
+
+// ─── CONVERSATIONS & MESSAGES ─────────────────────────────────
+
+model Conversation {
+  id         String           @id @default(dbgenerated("uuid_generate_v4()"))
+  userId     String
+  title      String
+  summary    String?
+  model      String           @default("claude-sonnet-4-6")
+  mode       ConversationMode @default(CHAT)
+  agentId    String?
+  isArchived Boolean          @default(false)
+  isPinned   Boolean          @default(false)
+  tags       String[]
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages Message[]
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+enum ConversationMode {
+  CHAT
+  VOICE
+  AGENT
+  CODE
+}
+
+model Message {
+  id             String        @id @default(dbgenerated("uuid_generate_v4()"))
+  conversationId String
+  role           MessageRole
+  content        String
+  status         MessageStatus @default(COMPLETE)
+  model          String?
+  inputTokens    Int?
+  outputTokens   Int?
+  toolCalls      Json?
+  toolResults    Json?
+  attachments    Json?
+  metadata       Json?
+  createdAt      DateTime      @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+  @@index([createdAt])
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+  TOOL
+}
+
+enum MessageStatus {
+  PENDING
+  STREAMING
+  COMPLETE
+  ERROR
+}
+
+// ─── MEMORY SYSTEM ───────────────────────────────────────────
+
+model Memory {
+  id             String           @id @default(dbgenerated("uuid_generate_v4()"))
+  userId         String
+  type           MemoryType
+  content        String
+  summary        String?
+  importance     MemoryImportance @default(MEDIUM)
+  embedding      Unsupported("vector(1536)")?
+  tags           String[]
+  source         String?
+  sourceId       String?
+  accessCount    Int              @default(0)
+  lastAccessedAt DateTime?
+  expiresAt      DateTime?
+  metadata       Json?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([type])
+  @@index([userId, type])
+}
+
+enum MemoryType {
+  CONVERSATION
+  PREFERENCE
+  FACT
+  GOAL
+  PROJECT
+  SKILL
+  PERSON
+  EVENT
+}
+
+enum MemoryImportance {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+// ─── AGENTS ──────────────────────────────────────────────────
+
+model AgentRun {
+  id             String      @id @default(dbgenerated("uuid_generate_v4()"))
+  agentId        String
+  userId         String
+  conversationId String?
+  status         AgentStatus @default(IDLE)
+  input          String
+  output         String?
+  tokensUsed     Int         @default(0)
+  durationMs     Int         @default(0)
+  error          String?
+  startedAt      DateTime    @default(now())
+  completedAt    DateTime?
+
+  user  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  steps AgentStep[]
+
+  @@index([userId])
+  @@index([agentId])
+  @@index([status])
+}
+
+model AgentStep {
+  id          String    @id @default(dbgenerated("uuid_generate_v4()"))
+  runId       String
+  stepNumber  Int
+  type        StepType
+  content     String
+  toolName    String?
+  toolInput   Json?
+  toolOutput  Json?
+  timestamp   DateTime  @default(now())
+
+  run AgentRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@index([runId])
+}
+
+enum AgentStatus {
+  IDLE
+  RUNNING
+  PAUSED
+  ERROR
+  COMPLETE
+}
+
+enum StepType {
+  THOUGHT
+  ACTION
+  OBSERVATION
+  FINAL
+}
+
+// ─── TASKS & GOALS ───────────────────────────────────────────
+
+model Task {
+  id               String       @id @default(dbgenerated("uuid_generate_v4()"))
+  userId           String
+  projectId        String?
+  title            String
+  description      String?
+  status           TaskStatus   @default(TODO)
+  priority         TaskPriority @default(MEDIUM)
+  dueDate          DateTime?
+  completedAt      DateTime?
+  tags             String[]
+  assignedAgentId  String?
+  isRecurring      Boolean      @default(false)
+  recurringPattern String?
+  estimatedMinutes Int?
+  actualMinutes    Int?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project  Project?  @relation(fields: [projectId], references: [id])
+  subtasks Subtask[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([projectId])
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  BLOCKED
+  DONE
+  CANCELLED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+model Subtask {
+  id          String    @id @default(dbgenerated("uuid_generate_v4()"))
+  taskId      String
+  title       String
+  isComplete  Boolean   @default(false)
+  completedAt DateTime?
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+}
+
+model Goal {
+  id          String     @id @default(dbgenerated("uuid_generate_v4()"))
+  userId      String
+  title       String
+  description String?
+  category    String
+  priority    GoalPriority @default(MEDIUM)
+  status      GoalStatus @default(ACTIVE)
+  targetDate  DateTime?
+  progress    Float      @default(0)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  milestones Milestone[]
+
+  @@index([userId])
+}
+
+enum GoalStatus {
+  ACTIVE
+  COMPLETED
+  PAUSED
+  ABANDONED
+}
+
+enum GoalPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model Milestone {
+  id          String    @id @default(dbgenerated("uuid_generate_v4()"))
+  goalId      String
+  title       String
+  isComplete  Boolean   @default(false)
+  completedAt DateTime?
+
+  goal Goal @relation(fields: [goalId], references: [id], onDelete: Cascade)
+}
+
+model Project {
+  id          String        @id @default(dbgenerated("uuid_generate_v4()"))
+  userId      String
+  name        String
+  description String?
+  status      ProjectStatus @default(ACTIVE)
+  category    String?
+  tags        String[]
+  repository  String?
+  notes       String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tasks Task[]
+
+  @@index([userId])
+}
+
+enum ProjectStatus {
+  PLANNING
+  ACTIVE
+  PAUSED
+  COMPLETE
+  ARCHIVED
+}
+
+// ─── REMINDERS & CALENDAR ────────────────────────────────────
+
+model Reminder {
+  id               String    @id @default(dbgenerated("uuid_generate_v4()"))
+  userId           String
+  taskId           String?
+  title            String
+  description      String?
+  scheduledAt      DateTime
+  repeatInterval   String?
+  isComplete       Boolean   @default(false)
+  notificationSent Boolean   @default(false)
+  createdAt        DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([scheduledAt])
+}
+
+model CalendarEvent {
+  id          String    @id @default(dbgenerated("uuid_generate_v4()"))
+  userId      String
+  title       String
+  description String?
+  startAt     DateTime
+  endAt       DateTime
+  allDay      Boolean   @default(false)
+  location    String?
+  attendees   String[]
+  source      String    @default("local")
+  externalId  String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([startAt])
+}
+
+// ─── AUTOMATIONS ─────────────────────────────────────────────
+
+model Automation {
+  id           String   @id @default(dbgenerated("uuid_generate_v4()"))
+  userId       String
+  name         String
+  description  String?
+  isEnabled    Boolean  @default(true)
+  trigger      Json
+  conditions   Json     @default("[]")
+  actions      Json
+  lastRunAt    DateTime?
+  runCount     Int      @default(0)
+  successCount Int      @default(0)
+  failureCount Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  runs AutomationRun[]
+
+  @@index([userId])
+}
+
+model AutomationRun {
+  id           String              @id @default(dbgenerated("uuid_generate_v4()"))
+  automationId String
+  status       AutomationRunStatus
+  trigger      String
+  steps        Json                @default("[]")
+  startedAt    DateTime            @default(now())
+  completedAt  DateTime?
+  errorMessage String?
+
+  automation Automation @relation(fields: [automationId], references: [id], onDelete: Cascade)
+
+  @@index([automationId])
+}
+
+enum AutomationRunStatus {
+  RUNNING
+  SUCCESS
+  FAILED
+  CANCELLED
+}
+
+// ─── AUDIT LOGS ──────────────────────────────────────────────
+
+model AuditLog {
+  id           String   @id @default(dbgenerated("uuid_generate_v4()"))
+  userId       String
+  action       String
+  resource     String
+  resourceId   String?
+  changes      Json?
+  ipAddress    String?
+  userAgent    String?
+  success      Boolean  @default(true)
+  errorMessage String?
+  timestamp    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([timestamp])
+  @@index([resource])
+}

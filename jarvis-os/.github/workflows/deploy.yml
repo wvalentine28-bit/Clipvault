@@ -1,0 +1,48 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Deployment environment"
+        required: true
+        default: "production"
+        type: choice
+        options: [production, staging]
+
+jobs:
+  deploy:
+    name: Deploy to ${{ github.event.inputs.environment || 'production' }}
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || 'production' }}
+    concurrency:
+      group: deploy-${{ github.event.inputs.environment || 'production' }}
+      cancel-in-progress: false
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            cd /opt/jarvis-os
+            git pull origin main
+            docker-compose pull
+            docker-compose up -d --remove-orphans
+            docker-compose exec -T api pnpm db:migrate:deploy
+            docker image prune -f
+
+      - name: Health check
+        run: |
+          sleep 15
+          curl -f ${{ secrets.APP_URL }}/health || exit 1
+
+      - name: Notify success
+        if: success()
+        run: echo "Deployed successfully to ${{ github.event.inputs.environment || 'production' }}"
