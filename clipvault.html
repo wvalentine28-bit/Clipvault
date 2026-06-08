@@ -943,8 +943,8 @@
 
       <div id="viral-error" class="info-banner warn" style="display:none;">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;flex-shrink:0;"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-        <span id="viral-error-msg"></span>
-        <button class="btn btn-ghost btn-sm" style="margin-left:auto;white-space:nowrap;" onclick="showPanel('settings')">Setup API Key</button>
+        <span id="viral-error-msg">Could not load trending videos — make sure the server is running on your local machine, not a cloud host.</span>
+        <button class="btn btn-ghost btn-sm" style="margin-left:auto;white-space:nowrap;" onclick="fetchTrending()">Retry</button>
       </div>
 
       <div class="viral-grid" id="viral-grid"></div>
@@ -1489,15 +1489,19 @@
 
   // ── Viral Finder ───────────────────────────────────────────────────
   function _fmtViews(n) {
+    // Scraper returns already-formatted strings like "1.2M views"
+    if (typeof n === 'string' && /[MKmk]|views?/i.test(n)) return n;
     n = parseInt(n) || 0;
     if (n >= 1e6) return (n/1e6).toFixed(1) + 'M views';
     if (n >= 1e3) return (n/1e3).toFixed(0) + 'K views';
     return n + ' views';
   }
 
-  function _fmtDuration(iso) {
-    const m = (iso||'').match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
-    if (!m) return '?';
+  function _fmtDuration(d) {
+    // Scraper returns "4:23" directly; API returns ISO "PT4M23S"
+    if (/^\d+:\d+/.test(d)) return d;
+    const m = (d||'').match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+    if (!m) return '';
     const h = +m[1]||0, min = +m[2]||0, s = +m[3]||0;
     return h ? `${h}:${String(min).padStart(2,'0')}:${String(s).padStart(2,'0')}` : `${min}:${String(s).padStart(2,'0')}`;
   }

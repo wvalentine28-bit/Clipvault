@@ -25,6 +25,5 @@ app.get('/', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`\n🎬 ClipVault running at http://localhost:${PORT}`);
-  console.log(`   Make sure YOUTUBE_API_KEY is set in your .env file.\n`);
+  console.log(`\n🎬 ClipVault running at http://localhost:${PORT}\n`);
 });
