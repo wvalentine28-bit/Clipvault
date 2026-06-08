@@ -66,7 +66,16 @@ class VectorStore:
             )
             return response.data[0].embedding
 
-        raise ValueError("No embedding provider configured")
+        # Fallback: fastembed (local, free, no API key required)
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, self._embed_local, text)
+
+    def _embed_local(self, text: str) -> List[float]:
+        if self._embedding_fn is None:
+            from fastembed import TextEmbedding
+            self._embedding_fn = TextEmbedding(model_name="BAAI/bge-small-en-v1.5")
+        embeddings = list(self._embedding_fn.embed([text]))
+        return embeddings[0].tolist()
 
     async def add_memory(
         self,

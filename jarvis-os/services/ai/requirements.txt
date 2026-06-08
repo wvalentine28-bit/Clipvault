@@ -23,6 +23,7 @@ scipy==1.14.1
 # Vector DB
 chromadb==0.5.18
 pinecone-client==5.0.1
+fastembed==0.3.6
 
 # Web / Browser
 playwright==1.48.0

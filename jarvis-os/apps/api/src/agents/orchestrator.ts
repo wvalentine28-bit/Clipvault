@@ -40,14 +40,25 @@ Your personality:
 Always think step by step about which agent(s) to invoke for optimal results.`;
 
 function createModel(modelName: string = "claude-sonnet-4-6") {
-  if (modelName.startsWith("claude")) {
+  // If an OpenAI model is requested but no key is configured, fall back to Claude
+  const isOpenAIModel = modelName.startsWith("gpt") || modelName.startsWith("o3") || modelName.startsWith("o4");
+  if (isOpenAIModel && !config.OPENAI_API_KEY) {
+    logger.warn({ model: modelName }, "OpenAI model requested but OPENAI_API_KEY not set — falling back to claude-sonnet-4-6");
+    modelName = "claude-sonnet-4-6";
+  }
+
+  if (modelName.startsWith("claude") || !config.OPENAI_API_KEY) {
+    if (!config.ANTHROPIC_API_KEY) {
+      throw new Error("No AI provider configured. Set ANTHROPIC_API_KEY (recommended) or OPENAI_API_KEY.");
+    }
     return new ChatAnthropic({
       apiKey: config.ANTHROPIC_API_KEY,
-      model: modelName,
+      model: modelName.startsWith("claude") ? modelName : "claude-sonnet-4-6",
       temperature: 0.7,
       streaming: true,
     });
   }
+
   return new ChatOpenAI({
     apiKey: config.OPENAI_API_KEY,
     model: modelName,
