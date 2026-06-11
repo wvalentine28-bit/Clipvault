@@ -1,10 +1,10 @@
-import { Router, Request, Response } from "express";
+import { IRouter, Router, Request, Response } from "express";
 import { z } from "zod";
 import { prisma } from "@jarvis/database";
 import { AppError } from "../middleware/errorHandler";
 import { createSuccessResponse } from "@jarvis/shared";
 
-const router = Router();
+const router: IRouter = Router();
 
 const automationSchema = z.object({
   name: z.string().min(1).max(200),
@@ -82,13 +82,13 @@ router.post("/", async (req: Request, res: Response, next) => {
 router.patch("/:id", async (req: Request, res: Response, next) => {
   try {
     const existing = await prisma.automation.findFirst({
-      where: { id: req.params.id, userId: req.user!.id },
+      where: { id: req.params.id as string, userId: req.user!.id },
     });
     if (!existing) throw new AppError(404, "NOT_FOUND", "Automation not found");
 
     const data = automationSchema.partial().parse(req.body);
     const automation = await prisma.automation.update({
-      where: { id: req.params.id },
+      where: { id: req.params.id as string },
       data: {
         ...data,
         trigger: data.trigger as any,
@@ -105,7 +105,7 @@ router.patch("/:id", async (req: Request, res: Response, next) => {
 router.post("/:id/run", async (req: Request, res: Response, next) => {
   try {
     const automation = await prisma.automation.findFirst({
-      where: { id: req.params.id, userId: req.user!.id },
+      where: { id: req.params.id as string, userId: req.user!.id },
     });
     if (!automation) throw new AppError(404, "NOT_FOUND", "Automation not found");
 

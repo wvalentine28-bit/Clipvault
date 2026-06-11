@@ -4,7 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckSquare, Plus, Filter, Calendar, Flag, Trash2, Edit, Clock } from "lucide-react";
 import useSWR from "swr";
-import { apiClient } from "@/lib/api";
+import { apiClient, fetcher } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 const STATUS_COLUMNS = [
@@ -35,7 +35,7 @@ export default function TasksPage() {
   const [showNew, setShowNew] = useState(false);
   const [newTask, setNewTask] = useState({ title: "", priority: "MEDIUM", status: "TODO" });
 
-  const { data, mutate } = useSWR("/tasks?pageSize=100", apiClient.get);
+  const { data, mutate } = useSWR("/tasks?pageSize=100", fetcher);
   const tasks: Task[] = data?.items || data || [];
 
   const handleCreate = async (e: React.FormEvent) => {

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Zap, Plus, Play, Pause, Trash2, Clock, CheckCircle, XCircle, Globe, Mic } from "lucide-react";
 import useSWR from "swr";
-import { apiClient } from "@/lib/api";
+import { apiClient, fetcher } from "@/lib/api";
 import { cn, formatDate } from "@/lib/utils";
 import { toast } from "@/components/ui/toaster";
 
@@ -29,7 +29,7 @@ interface Automation {
 }
 
 export default function AutomationsPage() {
-  const { data, mutate } = useSWR("/automations", apiClient.get);
+  const { data, mutate } = useSWR("/automations", fetcher);
   const automations: Automation[] = data?.items || data || [];
 
   const handleToggle = async (id: string, isEnabled: boolean) => {

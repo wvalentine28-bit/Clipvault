@@ -1,8 +1,8 @@
-import { Router, Request, Response } from "express";
+import { IRouter, Router, Request, Response } from "express";
 import { prisma } from "@jarvis/database";
 import { createSuccessResponse } from "@jarvis/shared";
 
-const router = Router();
+const router: IRouter = Router();
 
 router.get("/overview", async (req: Request, res: Response, next) => {
   try {

@@ -75,14 +75,14 @@ export interface MultiAgentTask {
   id: string;
   orchestratorId: string;
   goal: string;
-  subTasks: SubTask[];
+  subTasks: AgentSubTask[];
   status: AgentStatus;
   result?: string;
   createdAt: Date;
   completedAt?: Date;
 }
 
-export interface SubTask {
+export interface AgentSubTask {
   id: string;
   parentTaskId: string;
   agentType: AgentType;

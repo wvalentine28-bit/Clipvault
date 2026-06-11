@@ -11,7 +11,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!token) return;
     apiClient
       .get("/auth/me")
-      .then((data) => setUser(data))
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .then((data: any) => setUser(data))
       .catch(() => {
         setToken(null);
         setUser(null);

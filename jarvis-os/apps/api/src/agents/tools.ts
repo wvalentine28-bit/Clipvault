@@ -6,8 +6,14 @@ import { logger } from "../index";
 
 // ─── WEB SEARCH ──────────────────────────────────────────────
 
+const webSearchSchema = z.object({
+  query: z.string().describe("The search query"),
+  maxResults: z.number().optional().describe("Number of results (default 5)"),
+});
+
+// @ts-ignore — LangChain tool() schema inference exceeds TS depth limit
 export const webSearchTool = tool(
-  async ({ query, maxResults = 5 }) => {
+  async ({ query, maxResults = 5 }: z.infer<typeof webSearchSchema>) => {
     try {
       if (config.TAVILY_API_KEY) {
         const response = await fetch("https://api.tavily.com/search", {
@@ -81,91 +87,109 @@ export const webSearchTool = tool(
   {
     name: "web_search",
     description: "Search the internet for current information on any topic",
-    schema: z.object({
-      query: z.string().describe("The search query"),
-      maxResults: z.number().optional().describe("Number of results (default 5)"),
-    }),
+    schema: webSearchSchema,
   }
 );
 
 // ─── MEMORY TOOLS ────────────────────────────────────────────
 
+const memorySearchSchema = z.object({
+  query: z.string().describe("What to search for in memory"),
+  userId: z.string().describe("User ID"),
+  types: z
+    .array(z.string())
+    .optional()
+    .describe("Memory types to filter by"),
+  limit: z.number().optional().describe("Max results"),
+});
+
+// @ts-ignore — LangChain tool() schema inference exceeds TS depth limit
 export const memorySearchTool = tool(
-  async ({ query, userId, types, limit }) => {
+  async ({ query, userId, types, limit }: z.infer<typeof memorySearchSchema>) => {
     const results = await searchMemories({ query, userId, types, limit });
     return JSON.stringify(results);
   },
   {
     name: "search_memory",
     description: "Search the user's long-term memory for relevant information",
-    schema: z.object({
-      query: z.string().describe("What to search for in memory"),
-      userId: z.string().describe("User ID"),
-      types: z
-        .array(z.string())
-        .optional()
-        .describe("Memory types to filter by"),
-      limit: z.number().optional().describe("Max results"),
-    }),
+    schema: memorySearchSchema,
   }
 );
 
+const memorySaveSchema = z.object({
+  userId: z.string(),
+  type: z
+    .enum([
+      "conversation",
+      "preference",
+      "fact",
+      "goal",
+      "project",
+      "skill",
+      "person",
+      "event",
+    ])
+    .describe("Type of memory"),
+  content: z.string().describe("The content to remember"),
+  importance: z
+    .enum(["low", "medium", "high", "critical"])
+    .optional()
+    .describe("How important this memory is"),
+  tags: z.array(z.string()).optional().describe("Tags for the memory"),
+});
+
+// @ts-ignore — LangChain tool() schema inference exceeds TS depth limit
 export const memorySaveTool = tool(
-  async ({ userId, type, content, importance, tags }) => {
+  async ({ userId, type, content, importance, tags }: z.infer<typeof memorySaveSchema>) => {
     const memory = await saveMemory({ userId, type, content, importance, tags });
     return JSON.stringify({ success: true, id: (memory as { id: string }).id });
   },
   {
     name: "save_memory",
     description: "Save important information to the user's long-term memory",
-    schema: z.object({
-      userId: z.string(),
-      type: z
-        .enum([
-          "conversation",
-          "preference",
-          "fact",
-          "goal",
-          "project",
-          "skill",
-          "person",
-          "event",
-        ])
-        .describe("Type of memory"),
-      content: z.string().describe("The content to remember"),
-      importance: z
-        .enum(["low", "medium", "high", "critical"])
-        .optional()
-        .describe("How important this memory is"),
-      tags: z.array(z.string()).optional().describe("Tags for the memory"),
-    }),
+    schema: memorySaveSchema,
   }
 );
 
 // ─── CODE EXECUTION ──────────────────────────────────────────
 
+const codeAnalysisSchema = z.object({
+  code: z.string().describe("The code to analyze"),
+  language: z.string().describe("Programming language"),
+  task: z
+    .string()
+    .describe("What to do with the code (analyze/explain/find bugs)"),
+});
+
+// @ts-ignore — LangChain tool() schema inference exceeds TS depth limit
 export const codeAnalysisTool = tool(
-  async ({ code, language, task }) => {
+  async ({ code, language, task }: z.infer<typeof codeAnalysisSchema>) => {
     const prompt = `Analyze this ${language} code and ${task}:\n\n\`\`\`${language}\n${code}\n\`\`\``;
     return JSON.stringify({ analysis: prompt, language, task });
   },
   {
     name: "analyze_code",
     description: "Analyze, review, or explain code",
-    schema: z.object({
-      code: z.string().describe("The code to analyze"),
-      language: z.string().describe("Programming language"),
-      task: z
-        .string()
-        .describe("What to do with the code (analyze/explain/find bugs)"),
-    }),
+    schema: codeAnalysisSchema,
   }
 );
 
 // ─── CALENDAR & TASKS ────────────────────────────────────────
 
+const createTaskSchema = z.object({
+  userId: z.string(),
+  title: z.string().describe("Task title"),
+  description: z.string().optional().describe("Task description"),
+  priority: z
+    .enum(["low", "medium", "high", "urgent"])
+    .optional()
+    .describe("Task priority"),
+  dueDate: z.string().optional().describe("Due date in ISO format"),
+});
+
+// @ts-ignore — LangChain tool() schema inference exceeds TS depth limit
 export const createTaskTool = tool(
-  async ({ title, description, priority, dueDate, userId }) => {
+  async ({ title, description, priority, dueDate, userId }: z.infer<typeof createTaskSchema>) => {
     const { prisma } = await import("@jarvis/database");
     const task = await prisma.task.create({
       data: {
@@ -182,21 +206,21 @@ export const createTaskTool = tool(
   {
     name: "create_task",
     description: "Create a new task for the user",
-    schema: z.object({
-      userId: z.string(),
-      title: z.string().describe("Task title"),
-      description: z.string().optional().describe("Task description"),
-      priority: z
-        .enum(["low", "medium", "high", "urgent"])
-        .optional()
-        .describe("Task priority"),
-      dueDate: z.string().optional().describe("Due date in ISO format"),
-    }),
+    schema: createTaskSchema,
   }
 );
 
+const getTasksSchema = z.object({
+  userId: z.string(),
+  status: z
+    .enum(["todo", "in_progress", "blocked", "done", "cancelled"])
+    .optional(),
+  limit: z.number().optional(),
+});
+
+// @ts-ignore — LangChain tool() schema inference exceeds TS depth limit
 export const getTasksTool = tool(
-  async ({ userId, status, limit }) => {
+  async ({ userId, status, limit }: z.infer<typeof getTasksSchema>) => {
     const { prisma } = await import("@jarvis/database");
     const tasks = await prisma.task.findMany({
       where: {
@@ -211,13 +235,7 @@ export const getTasksTool = tool(
   {
     name: "get_tasks",
     description: "Get the user's tasks",
-    schema: z.object({
-      userId: z.string(),
-      status: z
-        .enum(["todo", "in_progress", "blocked", "done", "cancelled"])
-        .optional(),
-      limit: z.number().optional(),
-    }),
+    schema: getTasksSchema,
   }
 );
 

@@ -1,10 +1,10 @@
-import { Router, Request, Response } from "express";
+import { IRouter, Router, Request, Response } from "express";
 import { z } from "zod";
 import { prisma } from "@jarvis/database";
 import { AppError } from "../middleware/errorHandler";
 import { createSuccessResponse } from "@jarvis/shared";
 
-const router = Router();
+const router: IRouter = Router();
 
 const createTaskSchema = z.object({
   title: z.string().min(1).max(500),
@@ -75,14 +75,14 @@ router.post("/", async (req: Request, res: Response, next) => {
 router.patch("/:id", async (req: Request, res: Response, next) => {
   try {
     const existing = await prisma.task.findFirst({
-      where: { id: req.params.id, userId: req.user!.id },
+      where: { id: req.params.id as string, userId: req.user!.id },
     });
     if (!existing) throw new AppError(404, "NOT_FOUND", "Task not found");
 
     const { subtasks, ...updates } = createTaskSchema.partial().parse(req.body);
 
     const task = await prisma.task.update({
-      where: { id: req.params.id },
+      where: { id: req.params.id as string },
       data: {
         ...updates,
         status: updates.status ? (updates.status.toUpperCase() as any) : undefined,
@@ -103,11 +103,11 @@ router.patch("/:id", async (req: Request, res: Response, next) => {
 router.delete("/:id", async (req: Request, res: Response, next) => {
   try {
     const existing = await prisma.task.findFirst({
-      where: { id: req.params.id, userId: req.user!.id },
+      where: { id: req.params.id as string, userId: req.user!.id },
     });
     if (!existing) throw new AppError(404, "NOT_FOUND", "Task not found");
 
-    await prisma.task.delete({ where: { id: req.params.id } });
+    await prisma.task.delete({ where: { id: req.params.id as string } });
     res.json(createSuccessResponse({ deleted: true }));
   } catch (err) {
     next(err);

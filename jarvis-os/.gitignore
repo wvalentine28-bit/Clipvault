@@ -85,3 +85,7 @@ secrets/
 
 # Chroma
 chroma_db/
+
+# Electron build artifacts
+apps/desktop/release/
+apps/desktop/dist/

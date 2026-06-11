@@ -16,13 +16,13 @@ import {
   Cell,
 } from "recharts";
 import useSWR from "swr";
-import { apiClient } from "@/lib/api";
+import { apiClient, fetcher } from "@/lib/api";
 
 const CHART_COLORS = ["#3b82f6", "#8b5cf6", "#10b981", "#f59e0b", "#ef4444", "#06b6d4"];
 
 export default function AnalyticsPage() {
-  const { data: overview } = useSWR("/analytics/overview", apiClient.get);
-  const { data: usage } = useSWR("/analytics/usage", apiClient.get);
+  const { data: overview } = useSWR("/analytics/overview", fetcher);
+  const { data: usage } = useSWR("/analytics/usage", fetcher);
 
   const activityData = Object.entries(overview?.activityByDay || {}).map(([date, count]) => ({
     date: new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),

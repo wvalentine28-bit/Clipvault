@@ -1,9 +1,9 @@
-import { Router, Request, Response } from "express";
+import { IRouter, Router, Request, Response } from "express";
 import { z } from "zod";
 import { prisma } from "@jarvis/database";
 import { createSuccessResponse } from "@jarvis/shared";
 
-const router = Router();
+const router: IRouter = Router();
 
 const preferencesSchema = z.object({
   theme: z.enum(["dark", "light", "system"]).optional(),
@@ -106,7 +106,7 @@ router.post("/api-keys", async (req: Request, res: Response, next) => {
 router.delete("/api-keys/:id", async (req: Request, res: Response, next) => {
   try {
     await prisma.apiKey.deleteMany({
-      where: { id: req.params.id, userId: req.user!.id },
+      where: { id: req.params.id as string, userId: req.user!.id },
     });
     res.json(createSuccessResponse({ deleted: true }));
   } catch (err) {

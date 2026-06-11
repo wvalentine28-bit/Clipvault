@@ -4,7 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FolderOpen, Plus, GitBranch, Tag, MoreHorizontal, CheckSquare } from "lucide-react";
 import useSWR from "swr";
-import { apiClient } from "@/lib/api";
+import { apiClient, fetcher } from "@/lib/api";
 import { cn, formatDate } from "@/lib/utils";
 
 const STATUS_COLORS: Record<string, string> = {
@@ -31,7 +31,7 @@ export default function ProjectsPage() {
   const [showNew, setShowNew] = useState(false);
   const [newProject, setNewProject] = useState({ name: "", description: "", category: "" });
 
-  const { data, mutate } = useSWR("/projects", apiClient.get);
+  const { data, mutate } = useSWR("/projects", fetcher);
   const projects: Project[] = data?.items || data || [];
 
   const handleCreate = async (e: React.FormEvent) => {

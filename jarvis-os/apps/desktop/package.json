@@ -4,7 +4,7 @@
   "private": true,
   "main": "dist/electron/main.js",
   "scripts": {
-    "build": "tsc && electron-builder",
+    "build": "tsc",
     "dev": "concurrently \"tsc --watch\" \"wait-on tcp:3000 && electron .\"",
     "start": "electron .",
     "pack": "electron-builder --dir",
@@ -50,7 +50,7 @@
     }
   },
   "dependencies": {
-    "electron-store": "^10.0.0"
+    "electron-store": "^8.2.0"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Brain, Search, Plus, Tag, Trash2, Layers } from "lucide-react";
 import useSWR from "swr";
-import { apiClient } from "@/lib/api";
+import { apiClient, fetcher } from "@/lib/api";
 import { formatDate } from "@/lib/utils";
 
 const MEMORY_TYPES = [
@@ -30,7 +30,7 @@ export default function MemoryPage() {
 
   const { data, mutate } = useSWR(
     `/memory?${typeFilter !== "all" ? `type=${typeFilter}` : ""}`,
-    apiClient.get
+    fetcher
   );
 
   const memories = searchResults.length > 0 ? searchResults : (data?.items || data || []);

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
 function getToken(): string | null {
@@ -12,7 +13,7 @@ function getToken(): string | null {
   }
 }
 
-async function request<T>(
+async function request<T = any>(
   path: string,
   options: RequestInit = {}
 ): Promise<T> {
@@ -36,14 +37,20 @@ async function request<T>(
   return data?.data ?? data;
 }
 
+// Non-generic fetcher used directly as SWR fetcher — returns `any` so SWR
+// infers data as `any` and property access doesn't require explicit typing.
+export function fetcher(path: string): Promise<any> {
+  return request(path);
+}
+
 export const apiClient = {
-  get: <T = unknown>(path: string) => request<T>(path),
-  post: <T = unknown>(path: string, body?: unknown) =>
+  get: <T = any>(path: string) => request<T>(path),
+  post: <T = any>(path: string, body?: unknown) =>
     request<T>(path, { method: "POST", body: JSON.stringify(body) }),
-  patch: <T = unknown>(path: string, body?: unknown) =>
+  patch: <T = any>(path: string, body?: unknown) =>
     request<T>(path, { method: "PATCH", body: JSON.stringify(body) }),
-  put: <T = unknown>(path: string, body?: unknown) =>
+  put: <T = any>(path: string, body?: unknown) =>
     request<T>(path, { method: "PUT", body: JSON.stringify(body) }),
-  delete: <T = unknown>(path: string) =>
+  delete: <T = any>(path: string) =>
     request<T>(path, { method: "DELETE" }),
 };

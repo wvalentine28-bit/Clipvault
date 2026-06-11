@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { IRouter, Router } from "express";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { prisma } from "@jarvis/database";
@@ -7,7 +7,7 @@ import { AppError } from "../middleware/errorHandler";
 import { strictRateLimiter } from "../middleware/rateLimiter";
 import { createSuccessResponse } from "@jarvis/shared";
 
-const router = Router();
+const router: IRouter = Router();
 
 const registerSchema = z.object({
   email: z.string().email(),
@@ -107,14 +107,15 @@ router.post("/login", strictRateLimiter, async (req, res, next) => {
 
 router.get("/me", authenticate, async (req, res, next) => {
   try {
-    const user = await prisma.user.findUnique({
+    const raw = await prisma.user.findUnique({
       where: { id: req.user!.id },
       include: { preferences: true },
-      omit: { passwordHash: true },
     });
 
-    if (!user) throw new AppError(404, "NOT_FOUND", "User not found");
+    if (!raw) throw new AppError(404, "NOT_FOUND", "User not found");
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { passwordHash: _pw, ...user } = raw;
     res.json(createSuccessResponse(user));
   } catch (err) {
     next(err);

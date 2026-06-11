@@ -1,4 +1,4 @@
-import { Router, Request, Response } from "express";
+import { IRouter, Router, Request, Response } from "express";
 import { z } from "zod";
 import { prisma } from "@jarvis/database";
 import { runOrchestratorStream } from "../agents/orchestrator";
@@ -7,7 +7,7 @@ import { AppError } from "../middleware/errorHandler";
 import { createSuccessResponse } from "@jarvis/shared";
 import { saveMemory } from "../services/memory";
 
-const router = Router();
+const router: IRouter = Router();
 
 const sendMessageSchema = z.object({
   conversationId: z.string().optional(),
@@ -55,7 +55,7 @@ router.get("/conversations", async (req: Request, res: Response, next) => {
 router.get("/conversations/:id", async (req: Request, res: Response, next) => {
   try {
     const conversation = await prisma.conversation.findFirst({
-      where: { id: req.params.id, userId: req.user!.id },
+      where: { id: req.params.id as string, userId: req.user!.id },
       include: {
         messages: {
           orderBy: { createdAt: "asc" },
@@ -205,14 +205,14 @@ router.post("/send", chatRateLimiter, async (req: Request, res: Response, next) 
 router.delete("/conversations/:id", async (req: Request, res: Response, next) => {
   try {
     const conversation = await prisma.conversation.findFirst({
-      where: { id: req.params.id, userId: req.user!.id },
+      where: { id: req.params.id as string, userId: req.user!.id },
     });
 
     if (!conversation) {
       throw new AppError(404, "NOT_FOUND", "Conversation not found");
     }
 
-    await prisma.conversation.delete({ where: { id: req.params.id } });
+    await prisma.conversation.delete({ where: { id: req.params.id as string } });
     res.json(createSuccessResponse({ deleted: true }));
   } catch (err) {
     next(err);

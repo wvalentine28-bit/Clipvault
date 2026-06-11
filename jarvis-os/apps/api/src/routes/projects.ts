@@ -1,10 +1,10 @@
-import { Router, Request, Response } from "express";
+import { IRouter, Router, Request, Response } from "express";
 import { z } from "zod";
 import { prisma } from "@jarvis/database";
 import { AppError } from "../middleware/errorHandler";
 import { createSuccessResponse } from "@jarvis/shared";
 
-const router = Router();
+const router: IRouter = Router();
 
 const projectSchema = z.object({
   name: z.string().min(1).max(200),
@@ -52,7 +52,7 @@ router.post("/", async (req: Request, res: Response, next) => {
 router.get("/:id", async (req: Request, res: Response, next) => {
   try {
     const project = await prisma.project.findFirst({
-      where: { id: req.params.id, userId: req.user!.id },
+      where: { id: req.params.id as string, userId: req.user!.id },
       include: { tasks: { include: { subtasks: true }, orderBy: { priority: "desc" } } },
     });
     if (!project) throw new AppError(404, "NOT_FOUND", "Project not found");
@@ -65,13 +65,13 @@ router.get("/:id", async (req: Request, res: Response, next) => {
 router.patch("/:id", async (req: Request, res: Response, next) => {
   try {
     const existing = await prisma.project.findFirst({
-      where: { id: req.params.id, userId: req.user!.id },
+      where: { id: req.params.id as string, userId: req.user!.id },
     });
     if (!existing) throw new AppError(404, "NOT_FOUND", "Project not found");
 
     const data = projectSchema.partial().parse(req.body);
     const project = await prisma.project.update({
-      where: { id: req.params.id },
+      where: { id: req.params.id as string },
       data: {
         ...data,
         status: data.status ? (data.status.toUpperCase() as any) : undefined,

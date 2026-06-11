@@ -1,4 +1,4 @@
-import { Router, Request, Response } from "express";
+import { IRouter, Router, Request, Response } from "express";
 import { z } from "zod";
 import { prisma } from "@jarvis/database";
 import { runAgentWithTools } from "../agents/orchestrator";
@@ -6,7 +6,7 @@ import { AppError } from "../middleware/errorHandler";
 import { createSuccessResponse } from "@jarvis/shared";
 import { chatRateLimiter } from "../middleware/rateLimiter";
 
-const router = Router();
+const router: IRouter = Router();
 
 const AGENT_DEFINITIONS = [
   {

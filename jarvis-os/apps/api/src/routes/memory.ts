@@ -1,11 +1,11 @@
-import { Router, Request, Response } from "express";
+import { IRouter, Router, Request, Response } from "express";
 import { z } from "zod";
 import { prisma } from "@jarvis/database";
 import { searchMemories, saveMemory } from "../services/memory";
 import { AppError } from "../middleware/errorHandler";
 import { createSuccessResponse } from "@jarvis/shared";
 
-const router = Router();
+const router: IRouter = Router();
 
 router.get("/", async (req: Request, res: Response, next) => {
   try {
@@ -90,12 +90,12 @@ router.post("/", async (req: Request, res: Response, next) => {
 router.delete("/:id", async (req: Request, res: Response, next) => {
   try {
     const memory = await prisma.memory.findFirst({
-      where: { id: req.params.id, userId: req.user!.id },
+      where: { id: req.params.id as string, userId: req.user!.id },
     });
 
     if (!memory) throw new AppError(404, "NOT_FOUND", "Memory not found");
 
-    await prisma.memory.delete({ where: { id: req.params.id } });
+    await prisma.memory.delete({ where: { id: req.params.id as string } });
     res.json(createSuccessResponse({ deleted: true }));
   } catch (err) {
     next(err);

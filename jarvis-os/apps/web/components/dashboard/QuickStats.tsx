@@ -3,10 +3,10 @@
 import { motion } from "framer-motion";
 import { MessageSquare, CheckSquare, Brain, Zap, TrendingUp } from "lucide-react";
 import useSWR from "swr";
-import { apiClient } from "@/lib/api";
+import { apiClient, fetcher } from "@/lib/api";
 
 export function QuickStats() {
-  const { data } = useSWR("/analytics/overview", apiClient.get);
+  const { data } = useSWR("/analytics/overview", fetcher);
 
   const stats = [
     {

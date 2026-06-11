@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { MessageSquare, Zap, Brain, CheckSquare, Clock } from "lucide-react";
 import useSWR from "swr";
-import { apiClient } from "@/lib/api";
+import { apiClient, fetcher } from "@/lib/api";
 import { formatDistanceToNow } from "@/lib/utils";
 
 const ACTIVITY_ICONS: Record<string, { icon: React.ElementType; color: string }> = {
@@ -14,7 +14,7 @@ const ACTIVITY_ICONS: Record<string, { icon: React.ElementType; color: string }>
 };
 
 export function ActivityFeed() {
-  const { data: conversations } = useSWR("/chat/conversations?pageSize=8", apiClient.get);
+  const { data: conversations } = useSWR("/chat/conversations?pageSize=8", fetcher);
 
   const activities = (conversations?.items || []).map((c: {
     id: string;

@@ -1,4 +1,4 @@
-import { prisma } from "@jarvis/database";
+import { prisma, Prisma } from "@jarvis/database";
 import { createEmbedding } from "./openai";
 import { cacheClient, cacheKey } from "./redis";
 import { logger } from "../index";
@@ -113,7 +113,7 @@ export async function saveMemory(data: {
         tags: data.tags || [],
         source: data.source,
         sourceId: data.sourceId,
-        metadata: data.metadata,
+        metadata: data.metadata as Prisma.InputJsonValue | undefined,
       },
     });
   }

@@ -1,4 +1,4 @@
-import { Router, Request, Response } from "express";
+import { IRouter, Router, Request, Response } from "express";
 import multer from "multer";
 import { transcribeAudio } from "../services/openai";
 import { synthesizeSpeech, getAvailableVoices } from "../services/elevenlabs";
@@ -7,7 +7,7 @@ import { AppError } from "../middleware/errorHandler";
 import { createSuccessResponse } from "@jarvis/shared";
 import { chatRateLimiter } from "../middleware/rateLimiter";
 
-const router = Router();
+const router: IRouter = Router();
 
 const upload = multer({
   storage: multer.memoryStorage(),

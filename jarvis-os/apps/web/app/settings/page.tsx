@@ -4,7 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Settings, User, Volume2, Bot, Shield, Key, Bell, Palette, Save } from "lucide-react";
 import useSWR from "swr";
-import { apiClient } from "@/lib/api";
+import { apiClient, fetcher } from "@/lib/api";
 import { toast } from "@/components/ui/toaster";
 import { cn } from "@/lib/utils";
 
@@ -28,7 +28,7 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState("general");
   const [saving, setSaving] = useState(false);
 
-  const { data: prefs, mutate } = useSWR("/settings/preferences", apiClient.get);
+  const { data: prefs, mutate } = useSWR("/settings/preferences", fetcher);
   const [formData, setFormData] = useState<Record<string, unknown>>({});
 
   const merged = { ...prefs, ...formData };

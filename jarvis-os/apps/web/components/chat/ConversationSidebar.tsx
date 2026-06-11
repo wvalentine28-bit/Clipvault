@@ -4,13 +4,13 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Plus, MessageSquare, Search, Trash2 } from "lucide-react";
 import useSWR from "swr";
-import { apiClient } from "@/lib/api";
+import { apiClient, fetcher } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "@/lib/utils";
 
 export function ConversationSidebar() {
   const [search, setSearch] = useState("");
-  const { data, mutate } = useSWR("/chat/conversations", apiClient.get);
+  const { data, mutate } = useSWR("/chat/conversations", fetcher);
 
   const conversations = (data?.items || []).filter((c: { title: string }) =>
     c.title.toLowerCase().includes(search.toLowerCase())
