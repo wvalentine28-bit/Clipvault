@@ -2,8 +2,19 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>ClipVault — YouTube Repurposing Suite</title>
+
+<!-- PWA -->
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#2563EB">
+
+<!-- iOS install support -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="ClipVault">
+<link rel="apple-touch-icon" href="/icons/icon-180.png">
+
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -592,6 +603,60 @@
   ::-webkit-scrollbar { width: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* ── VIRAL FINDER ── */
+  .viral-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+  }
+  .viral-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: all 0.12s;
+  }
+  .viral-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+  .viral-card-thumb {
+    width: 100%; aspect-ratio: 16/9; object-fit: cover;
+    background: var(--surface2); display: block;
+  }
+  .viral-card-placeholder {
+    width: 100%; aspect-ratio: 16/9;
+    background: linear-gradient(135deg,#1e3a5f,#2563EB);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px;
+  }
+  .viral-card-body { padding: 12px; }
+  .viral-card-title {
+    font-size: 13px; font-weight: 600; line-height: 1.4; margin-bottom: 6px;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .viral-card-meta { font-size: 11.5px; color: var(--text3); margin-bottom: 8px; }
+  .viral-card-actions { display: flex; gap: 8px; }
+
+  /* ── AUTH BANNER ── */
+  .info-banner {
+    background: var(--accent-light); border: 1px solid var(--accent);
+    border-radius: var(--radius); padding: 12px 16px;
+    display: flex; align-items: center; gap: 10px;
+    font-size: 13px; margin-bottom: 16px;
+  }
+  .info-banner.warn { background: var(--yellow-light); border-color: var(--yellow); }
+
+  /* ── CLIP RESULT ── */
+  .clip-result {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 16px;
+    box-shadow: var(--shadow); margin-top: 16px;
+  }
+  .clip-result video { width: 100%; max-height: 260px; border-radius: 8px; background: #000; }
+
+  /* ── MISC ── */
+  .badge-red { background: #FEE4E2; color: var(--red); }
+  @keyframes spin { to { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
@@ -616,7 +681,11 @@
     <div class="nav-item" onclick="showPanel('repurpose')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
       Repurpose Video
-      <span class="nav-badge">New</span>
+    </div>
+    <div class="nav-item" onclick="showPanel('viral')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      Viral Finder
+      <span class="nav-badge">Live</span>
     </div>
     <div class="nav-item" onclick="showPanel('clips')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.26a1 1 0 01-1.447.9L15 14M3 8a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
@@ -807,7 +876,7 @@
         <div class="card-body">
           <div style="display:flex;gap:10px;">
             <input class="input" placeholder="https://youtube.com/watch?v=..." style="flex:1;" id="yt-url">
-            <button class="btn btn-primary" onclick="simulateProcess()">
+            <button class="btn btn-primary" onclick="processVideoReal()">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;"><polygon points="5 3 19 12 5 21 5 3"/></svg>
               Analyze
             </button>
@@ -841,6 +910,55 @@
           </div>
         </div>
       </div>
+
+      <!-- Clip results injected here by JS -->
+      <div id="clip-results"></div>
+    </div>
+
+    <!-- VIRAL FINDER -->
+    <div class="panel" id="panel-viral">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap;">
+        <select class="select" id="viral-region" onchange="fetchTrending()">
+          <option value="US">🇺🇸 United States</option>
+          <option value="GB">🇬🇧 United Kingdom</option>
+          <option value="CA">🇨🇦 Canada</option>
+          <option value="AU">🇦🇺 Australia</option>
+          <option value="IN">🇮🇳 India</option>
+          <option value="BR">🇧🇷 Brazil</option>
+          <option value="MX">🇲🇽 Mexico</option>
+          <option value="DE">🇩🇪 Germany</option>
+          <option value="JP">🇯🇵 Japan</option>
+          <option value="KR">🇰🇷 South Korea</option>
+        </select>
+        <select class="select" id="viral-category" onchange="fetchTrending()">
+          <option value="0">All Categories</option>
+          <option value="10">Music</option>
+          <option value="17">Sports</option>
+          <option value="20">Gaming</option>
+          <option value="22">People &amp; Blogs</option>
+          <option value="23">Comedy</option>
+          <option value="24">Entertainment</option>
+          <option value="25">News &amp; Politics</option>
+          <option value="28">Science &amp; Tech</option>
+        </select>
+        <button class="btn btn-ghost" onclick="fetchTrending()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+          Refresh
+        </button>
+      </div>
+
+      <div id="viral-loading" style="display:none;text-align:center;padding:48px;color:var(--text3);">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:24px;height:24px;margin-bottom:10px;opacity:0.4;animation:spin 1s linear infinite;"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>
+        <div>Loading trending videos...</div>
+      </div>
+
+      <div id="viral-error" class="info-banner warn" style="display:none;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;flex-shrink:0;"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <span id="viral-error-msg">Could not load trending videos — make sure the server is running on your local machine, not a cloud host.</span>
+        <button class="btn btn-ghost btn-sm" style="margin-left:auto;white-space:nowrap;" onclick="fetchTrending()">Retry</button>
+      </div>
+
+      <div class="viral-grid" id="viral-grid"></div>
     </div>
 
     <!-- MY CLIPS -->
@@ -1244,7 +1362,8 @@
 <script>
   const panels = {
     dashboard: { title: 'Dashboard', sub: 'Welcome back, Matt.' },
-    repurpose: { title: 'Repurpose Video', sub: 'Upload a video or paste a YouTube URL to extract clips.' },
+    repurpose: { title: 'Repurpose Video', sub: 'Paste a YouTube URL to download and extract a Short.' },
+    viral: { title: 'Viral Finder', sub: 'Browse trending YouTube videos and convert them to Shorts.' },
     clips: { title: 'My Clips', sub: '5 clips in your library.' },
     scripts: { title: 'Script Writer', sub: 'AI-powered scripts for every format.' },
     schedule: { title: 'Scheduler', sub: 'Plan and publish across all platforms.' },
@@ -1252,21 +1371,23 @@
     settings: { title: 'Settings', sub: 'Manage channels and automation.' },
   };
 
+  // ── Panel navigation ──────────────────────────────────────────────
   function showPanel(id) {
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    document.getElementById('panel-' + id).classList.add('active');
-    const info = panels[id];
-    document.getElementById('page-title').textContent = info.title;
-    document.getElementById('page-sub').textContent = info.sub;
-    event && event.currentTarget && event.currentTarget.classList.add('active');
+    const panel = document.getElementById('panel-' + id);
+    if (!panel) return;
+    panel.classList.add('active');
+    const info = panels[id] || {};
+    document.getElementById('page-title').textContent = info.title || id;
+    document.getElementById('page-sub').textContent = info.sub || '';
+    if (event && event.currentTarget) event.currentTarget.classList.add('active');
+    if (id === 'viral' && document.getElementById('viral-grid').children.length === 0) {
+      fetchTrending();
+    }
   }
 
-  function simulateUpload() {
-    document.getElementById('yt-url').value = 'https://youtube.com/watch?v=example123';
-    setTimeout(simulateProcess, 300);
-  }
-
+  // ── Demo fallback (shown when server is not running) ───────────────
   function simulateProcess() {
     const card = document.getElementById('process-card');
     card.style.display = 'block';
@@ -1278,14 +1399,14 @@
       [55, 'Identifying key moments...'],
       [75, 'Extracting clip segments...'],
       [90, 'Generating thumbnails...'],
-      [100, 'Done! 7 clips found.'],
+      [100, 'Done! (demo mode — start the server for real processing)'],
     ];
     let i = 0;
     const run = () => {
       if (i >= steps.length) {
-        document.getElementById('clips-found').textContent = '7';
-        document.getElementById('hooks-found').textContent = '3';
-        document.getElementById('time-found').textContent = '0:48';
+        document.getElementById('clips-found').textContent = '1';
+        document.getElementById('hooks-found').textContent = '1';
+        document.getElementById('time-found').textContent = '0:60';
         return;
       }
       fill.style.width = steps[i][0] + '%';
@@ -1294,6 +1415,170 @@
       setTimeout(run, 800);
     };
     run();
+  }
+
+  // ── Real video processing ──────────────────────────────────────────
+  let _activeES = null;
+
+  async function processVideoReal(urlOverride, titleHint) {
+    // Close any in-flight SSE connection before starting a new job
+    if (_activeES) { _activeES.close(); _activeES = null; }
+    const url = urlOverride || document.getElementById('yt-url').value.trim();
+    if (!url) { alert('Please enter a YouTube URL.'); return; }
+
+    const card = document.getElementById('process-card');
+    const fill = document.getElementById('progress-fill');
+    const step = document.getElementById('process-step');
+    const results = document.getElementById('clip-results');
+
+    card.style.display = 'block';
+    results.innerHTML = '';
+    fill.style.width = '0%';
+    step.textContent = 'Starting...';
+    card.querySelector('.badge').textContent = 'In Progress';
+    card.querySelector('.badge').className = 'badge badge-yellow';
+
+    try {
+      const r = await fetch('/api/process', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ videoUrl: url, clipDuration: 60, autoDetect: true })
+      });
+      if (!r.ok) {
+        const e = await r.json();
+        throw new Error(e.error || 'Server error');
+      }
+      const { jobId } = await r.json();
+
+      const es = new EventSource('/api/process/' + jobId + '/events');
+      _activeES = es;
+      es.onmessage = e => {
+        const d = JSON.parse(e.data);
+        fill.style.width = d.progress + '%';
+        step.textContent = d.step;
+
+        if (d.status === 'done') {
+          card.querySelector('.badge').textContent = 'Complete';
+          card.querySelector('.badge').className = 'badge badge-green';
+          document.getElementById('clips-found').textContent = d.clips?.length || 1;
+          document.getElementById('hooks-found').textContent = d.clips?.length || 1;
+          const totalSec = Math.round(d.clips?.[0]?.duration || 60);
+          const mm = Math.floor(totalSec / 60), ss = totalSec % 60;
+          document.getElementById('time-found').textContent = `${mm}:${String(ss).padStart(2,'0')}`;
+          if (d.clips?.length) _renderClipResults(d.clips, titleHint || url);
+          _activeES = null; es.close();
+        }
+        if (d.status === 'error') {
+          card.querySelector('.badge').textContent = 'Error';
+          card.querySelector('.badge').className = 'badge badge-red';
+          _activeES = null; es.close();
+        }
+      };
+      es.onerror = () => { _activeES = null; es.close(); };
+
+    } catch (err) {
+      // Fall back to demo simulation if server isn't running
+      console.warn('Server not available, running demo:', err.message);
+      simulateProcess();
+    }
+  }
+
+  function _renderClipResults(clips, label) {
+    const el = document.getElementById('clip-results');
+    el.innerHTML = clips.map((c, i) => `
+      <div class="clip-result">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div>
+            <div style="font-size:14px;font-weight:600;">Short Clip ${i+1}</div>
+            <div style="font-size:12px;color:var(--text3);">${Math.round(c.duration || 60)}s · Vertical 9:16</div>
+          </div>
+          <a href="${c.clipUrl}" download class="btn btn-primary btn-sm">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download Short
+          </a>
+        </div>
+        <video controls src="${c.clipUrl}" style="width:100%;max-height:300px;border-radius:8px;background:#000;"></video>
+      </div>
+    `).join('');
+  }
+
+  function _esc(s) { return (s||'').replace(/'/g,"\\'").replace(/"/g,'\\"').replace(/</g,'&lt;'); }
+
+  // ── Viral Finder ───────────────────────────────────────────────────
+  function _fmtViews(n) {
+    // Scraper returns already-formatted strings like "1.2M views"
+    if (typeof n === 'string' && /[MKmk]|views?/i.test(n)) return n;
+    n = parseInt(n) || 0;
+    if (n >= 1e6) return (n/1e6).toFixed(1) + 'M views';
+    if (n >= 1e3) return (n/1e3).toFixed(0) + 'K views';
+    return n + ' views';
+  }
+
+  function _fmtDuration(d) {
+    // Scraper returns "4:23" directly; API returns ISO "PT4M23S"
+    if (/^\d+:\d+/.test(d)) return d;
+    const m = (d||'').match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+    if (!m) return '';
+    const h = +m[1]||0, min = +m[2]||0, s = +m[3]||0;
+    return h ? `${h}:${String(min).padStart(2,'0')}:${String(s).padStart(2,'0')}` : `${min}:${String(s).padStart(2,'0')}`;
+  }
+
+  function _htmlEsc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  async function fetchTrending() {
+    const region = document.getElementById('viral-region').value;
+    const cat = document.getElementById('viral-category').value;
+    const grid = document.getElementById('viral-grid');
+    const loading = document.getElementById('viral-loading');
+    const errEl = document.getElementById('viral-error');
+
+    loading.style.display = 'block';
+    errEl.style.display = 'none';
+    grid.innerHTML = '';
+
+    try {
+      const r = await fetch(`/api/trending?regionCode=${region}&categoryId=${cat}&maxResults=12`);
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || 'Failed to load trending videos');
+      loading.style.display = 'none';
+      _renderViralGrid(data.videos || []);
+    } catch (err) {
+      loading.style.display = 'none';
+      errEl.style.display = 'flex';
+      document.getElementById('viral-error-msg').textContent = err.message;
+    }
+  }
+
+  function _renderViralGrid(videos) {
+    const grid = document.getElementById('viral-grid');
+    if (!videos.length) {
+      grid.innerHTML = '<div style="color:var(--text3);padding:32px;text-align:center;">No videos found.</div>';
+      return;
+    }
+    grid.innerHTML = videos.map(v => `
+      <div class="viral-card">
+        ${v.thumbnail
+          ? `<img class="viral-card-thumb" src="${v.thumbnail}" alt="" loading="lazy" onerror="this.parentNode.innerHTML='<div class=viral-card-placeholder>▶</div>'">`
+          : `<div class="viral-card-placeholder">▶</div>`}
+        <div class="viral-card-body">
+          <div class="viral-card-title">${_htmlEsc(v.title)}</div>
+          <div class="viral-card-meta">${_htmlEsc(v.channelTitle)} · ${_fmtViews(v.viewCount)} · ${_fmtDuration(v.duration)}</div>
+          <div class="viral-card-actions">
+            <button class="btn btn-primary btn-sm" onclick="processFromViral('${_esc(v.url)}','${_esc(v.title)}')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              Create Short
+            </button>
+            <a href="${v.url}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">Watch</a>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function processFromViral(url, title) {
+    document.getElementById('yt-url').value = url;
+    showPanel('repurpose');
+    processVideoReal(url, title);
   }
 
   const scripts = {
@@ -1395,6 +1680,13 @@ I knew the account existed. I visited it. But I treated it like a checkbox — n
     const btn = document.getElementById('copy-btn');
     btn.textContent = 'Copied!';
     setTimeout(() => btn.textContent = 'Copy', 2000);
+  }
+
+  // Register service worker for PWA offline support
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
+    });
   }
 </script>
 </body>
