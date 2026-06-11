@@ -1407,7 +1407,11 @@
   }
 
   // ── Real video processing ──────────────────────────────────────────
+  let _activeES = null;
+
   async function processVideoReal(urlOverride, titleHint) {
+    // Close any in-flight SSE connection before starting a new job
+    if (_activeES) { _activeES.close(); _activeES = null; }
     const url = urlOverride || document.getElementById('yt-url').value.trim();
     if (!url) { alert('Please enter a YouTube URL.'); return; }
 
@@ -1436,6 +1440,7 @@
       const { jobId } = await r.json();
 
       const es = new EventSource('/api/process/' + jobId + '/events');
+      _activeES = es;
       es.onmessage = e => {
         const d = JSON.parse(e.data);
         fill.style.width = d.progress + '%';
@@ -1446,18 +1451,19 @@
           card.querySelector('.badge').className = 'badge badge-green';
           document.getElementById('clips-found').textContent = d.clips?.length || 1;
           document.getElementById('hooks-found').textContent = d.clips?.length || 1;
-          const dur = d.clips?.[0]?.duration;
-          document.getElementById('time-found').textContent = dur ? '0:' + Math.round(dur).toString().padStart(2,'0') : '1:00';
+          const totalSec = Math.round(d.clips?.[0]?.duration || 60);
+          const mm = Math.floor(totalSec / 60), ss = totalSec % 60;
+          document.getElementById('time-found').textContent = `${mm}:${String(ss).padStart(2,'0')}`;
           if (d.clips?.length) _renderClipResults(d.clips, titleHint || url);
-          es.close();
+          _activeES = null; es.close();
         }
         if (d.status === 'error') {
           card.querySelector('.badge').textContent = 'Error';
           card.querySelector('.badge').className = 'badge badge-red';
-          es.close();
+          _activeES = null; es.close();
         }
       };
-      es.onerror = () => { es.close(); };
+      es.onerror = () => { _activeES = null; es.close(); };
 
     } catch (err) {
       // Fall back to demo simulation if server isn't running

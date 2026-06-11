@@ -16,13 +16,16 @@ function analyzeAudioEnergy(inputPath, windowSize) {
       const totalDuration = meta.format.duration || 0;
       if (totalDuration <= windowSize) return resolve({ startTime: 0, duration: totalDuration });
 
-      const step = 30;
-      const numWindows = Math.max(1, Math.floor((totalDuration - windowSize) / step) + 1);
+      // Cap at 5 windows spread evenly across the video to avoid OOM
+      const MAX_WINDOWS = 5;
+      const numWindows = Math.min(MAX_WINDOWS, Math.max(1, Math.floor((totalDuration - windowSize) / 30) + 1));
+      const span = totalDuration - windowSize;
+      const step = numWindows > 1 ? span / (numWindows - 1) : 0;
       const results = [];
       let done = 0;
 
       for (let i = 0; i < numWindows; i++) {
-        const start = i * step;
+        const start = Math.min(i * step, span);
         const segDuration = Math.min(windowSize, totalDuration - start);
 
         // Run ffmpeg with volumedetect on this window
@@ -104,12 +107,12 @@ function generateThumbnail(inputPath, outputPath) {
 }
 
 async function processVideo(videoUrl, options = {}, onProgress) {
-  const { clipDuration = 60, autoDetect = true, startTime: manualStart } = options;
-  const jobId = uuidv4();
+  const { clipDuration = 60, autoDetect = true, startTime: manualStart, jobId } = options;
+  const fileId = jobId || uuidv4();
 
-  const downloadPath = path.join('uploads', 'downloads', `${jobId}.mp4`);
-  const clipPath = path.join('uploads', 'clips', `${jobId}.mp4`);
-  const thumbPath = path.join('uploads', 'thumbnails', `${jobId}.jpg`);
+  const downloadPath = path.join('uploads', 'downloads', `${fileId}.mp4`);
+  const clipPath = path.join('uploads', 'clips', `${fileId}.mp4`);
+  const thumbPath = path.join('uploads', 'thumbnails', `${fileId}.jpg`);
 
   try {
     // 1. Download
@@ -147,7 +150,7 @@ async function processVideo(videoUrl, options = {}, onProgress) {
     fs.unlink(downloadPath, () => {});
 
     const clipInfo = {
-      id: jobId,
+      id: fileId,
       clipPath,
       clipUrl: `/${clipPath.replace(/\\/g, '/')}`,
       thumbnailUrl: `/${thumbPath.replace(/\\/g, '/')}`,

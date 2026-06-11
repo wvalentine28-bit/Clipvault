@@ -16,15 +16,18 @@ router.post('/', async (req, res) => {
   const jobId = uuidv4();
   jobs.set(jobId, { status: 'pending', progress: 0, step: 'Queued...', clips: [] });
 
+  // Clean up job after 1 hour
+  setTimeout(() => jobs.delete(jobId), 3_600_000);
+
   // Start processing asynchronously
   setImmediate(async () => {
     try {
       await processVideo(
         videoUrl,
-        { clipDuration: parseInt(clipDuration) || 60, autoDetect, startTime },
+        { clipDuration: parseInt(clipDuration) || 60, autoDetect, startTime, jobId },
         evt => {
           const current = jobs.get(jobId) || {};
-          jobs.set(jobId, { ...current, status: 'processing', ...evt });
+          jobs.set(jobId, { ...current, ...evt });
         }
       );
     } catch (err) {
